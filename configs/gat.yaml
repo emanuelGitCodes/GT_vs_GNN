@@ -3,6 +3,8 @@
 # Note: if MPS memory is tight, reduce num_heads to 4 and document the change.
 
 model: gat
+in_channels: 128
+num_classes: 40
 hidden_dim: 256
 num_layers: 3
 num_heads: 8        # attention heads for hidden layers

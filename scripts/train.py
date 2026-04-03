@@ -1,6 +1,6 @@
 """train.py — Training entry point for GCN / GAT / GPS on ogbn-arxiv.
 
-Phase 2 implements the full GCN baseline training pipeline.
+Phases 2–3 implement full-batch training pipelines for GCN and GAT baselines.
 """
 
 from __future__ import annotations
@@ -174,6 +174,14 @@ def _is_mps_scatter_error(error: Exception) -> bool:
     return any(marker in message for marker in markers)
 
 
+def _mps_memory_info(device: torch.device) -> str:
+    """Return allocated MPS memory string for epoch logs."""
+    if device.type != "mps":
+        return ""
+    allocated_mb = torch.mps.current_allocated_memory() / 1e6
+    return f" | mps_mem {allocated_mb:.1f}MB"
+
+
 def train_epoch(
     model: torch.nn.Module,
     data: Data,
@@ -274,22 +282,26 @@ def main() -> None:
     # Load ogbn-arxiv dataset
     data, split_idx, dataset, _ = load_dataset(root=PROJECT_ROOT / "data")
 
-    # ogbn-arxiv is directed (citation graph). GCN's symmetric normalization
-    # assumes an undirected adjacency matrix, so we convert once up front.
+    # ogbn-arxiv is directed (citation graph). Our full-batch GCN/GAT baselines
+    # use the commonly adopted undirected variant for stable message passing.
     data.edge_index = to_undirected(data.edge_index, num_nodes=data.num_nodes)
 
     cfg.setdefault("in_channels", int(data.x.size(1)))
     cfg.setdefault("num_classes", int(dataset.num_classes))
 
-    # Model instantiation (Phase 2)
+    # Model instantiation (Phases 2–3)
     if cfg["model"] == "gcn":
         from models.gcn import GCN
 
         model = GCN(cfg).to(device)
+    elif cfg["model"] == "gat":
+        from models.gat import GAT
+
+        model = GAT(cfg).to(device)
     else:
         raise NotImplementedError(
             f"Model '{cfg['model']}' is not implemented in train.py yet. "
-            "Phase 2 currently supports --model gcn."
+            "Current support: --model gcn and --model gat."
         )
 
     data = data.to(device)
@@ -350,11 +362,13 @@ def main() -> None:
         val_accs.append(val_acc)
 
         if epoch % 10 == 0:
+            mem_info = _mps_memory_info(device)
             print(
                 f"Epoch {epoch:04d} | "
                 f"loss {train_loss:.4f} | "
                 f"train {train_acc:.4f} | "
                 f"val {val_acc:.4f}"
+                f"{mem_info}"
             )
 
         if val_acc > best_val_acc:
@@ -410,13 +424,15 @@ def main() -> None:
         filename="per_class_acc.json",
     )
 
-    print("\n[phase-2] Training complete.")
+    phase_label = "phase-2" if cfg["model"] == "gcn" else "phase-3"
+    print(f"\n[{phase_label}] Training complete.")
     print(
-        f"[phase-2] Best validation accuracy: {best_val_acc:.4f} (epoch {best_epoch})"
+        f"[{phase_label}] Best validation accuracy: {best_val_acc:.4f} "
+        f"(epoch {best_epoch})"
     )
-    print(f"[phase-2] Test accuracy: {test_acc:.4f}")
-    print(f"[phase-2] Checkpoint: {checkpoint_path}")
-    print(f"[phase-2] Per-class metrics: {results_dir / 'per_class_acc.json'}")
+    print(f"[{phase_label}] Test accuracy: {test_acc:.4f}")
+    print(f"[{phase_label}] Checkpoint: {checkpoint_path}")
+    print(f"[{phase_label}] Per-class metrics: {results_dir / 'per_class_acc.json'}")
 
 
 if __name__ == "__main__":
