@@ -1,7 +1,7 @@
 ---
 description: Primary development agent for the ogbn-arxiv GNN vs Graph Transformer project. Handles all implementation — model code, training scripts, data pipelines, and utilities.
 mode: primary
-model: anthropic/claude-sonnet-4-6
+model: openai/gpt-5.3-codex
 temperature: 0
 permissions:
   edit: allow
