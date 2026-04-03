@@ -9,6 +9,8 @@
 - Added Colab comparison notebook `notebooks/03_colab_evaluate_results.ipynb` for overall/per-class model analysis and delta plotting (Phase 5).
 
 ### Changed
+- Updated `notebooks/02_train_colab.ipynb` repository settings cell to authenticate private-clone access via Colab secret `GH_PAT` and explicit repo owner defaults (Phase 1).
+- Hardened Colab clone/pull cell in `notebooks/02_train_colab.ipynb` with non-git directory detection and guarded project root entry to prevent false `Working directory: /` states (Phase 1).
 - Refreshed `README.md` with accurate local/Colab environment guidance, current model implementation scope (GCN/GAT in `scripts/train.py`, GPS planned), updated quick-start commands, and phase-status table alignment (Phases 0–5 context).
 - Upgraded `scripts/train.py` from scaffold to full training pipeline with dataset loading, model dispatch, training/eval loops, early stopping, checkpointing, per-class export, and training-curve saving for GCN/GAT (Phases 2–3).
 - Added device override support (`--device {auto,mps,cuda,cpu}`) and config passthrough in `scripts/train.py` for local/Colab backend control (Phase 2 infrastructure).
@@ -19,4 +21,5 @@
 - Updated configs with explicit input/output dimensions in `configs/gcn.yaml` and `configs/gat.yaml` (Phases 2–3).
 
 ### Fixed
+- Fixed Colab setup failure mode where git commands ran against a non-repository path and notebook continued to `/`, by adding explicit runtime errors in `notebooks/02_train_colab.ipynb` (Phase 1).
 - Resolved severe GCN underperformance by correcting graph preprocessing to undirected adjacency before message passing in `scripts/train.py`; restored expected baseline behavior (~71% test range) (Phase 2).
