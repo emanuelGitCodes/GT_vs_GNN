@@ -1,0 +1,18 @@
+# GCN hyperparameters — Phase 2 baseline
+# Target: ~71% test accuracy on ogbn-arxiv (OGB leaderboard reference)
+
+model: gcn
+hidden_dim: 256
+num_layers: 3
+dropout: 0.5
+
+# Optimizer
+lr: 0.001
+weight_decay: 0.0005
+
+# Training schedule
+epochs: 500
+patience: 50   # early stopping on validation accuracy
+
+# Reproducibility
+seed: 42

@@ -1,0 +1,21 @@
+# GAT hyperparameters — Phase 3
+# Target: ~73% test accuracy on ogbn-arxiv (OGB leaderboard reference)
+# Note: if MPS memory is tight, reduce num_heads to 4 and document the change.
+
+model: gat
+hidden_dim: 256
+num_layers: 3
+num_heads: 8        # attention heads for hidden layers
+out_heads: 1        # single head on the output layer
+dropout: 0.5
+
+# Optimizer
+lr: 0.001
+weight_decay: 0.0005
+
+# Training schedule
+epochs: 500
+patience: 50   # early stopping on validation accuracy
+
+# Reproducibility
+seed: 42

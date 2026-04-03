@@ -1,7 +1,7 @@
 ---
 description: Read-only planning and analysis agent. Use for architecture decisions, debugging strategies, reviewing code, and reasoning through GPU memory/performance tradeoffs — without modifying files.
 mode: primary
-model: anthropic/claude-sonnet-4.6
+model: anthropic/claude-sonnet-4-6
 temperature: 0.2
 permissions:
   edit: deny
