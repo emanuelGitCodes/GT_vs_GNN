@@ -2,15 +2,28 @@
 
 **EEL 6878 — Modeling and AI | Final Project**
 
-Comparing GCN, GAT, and GPS (Graph Transformer) on the [ogbn-arxiv](https://ogb.stanford.edu/docs/nodeprop/#ogbn-arxiv) citation network (169K nodes, 1.1M edges, 40 classes).
+This repository compares **GCN**, **GAT**, and **GPS (Graph Transformer)** on the [ogbn-arxiv](https://ogb.stanford.edu/docs/nodeprop/#ogbn-arxiv) citation network (169K nodes, 1.1M edges, 40 classes).
 
-**Research question:** Does global attention (GPS) disproportionately benefit interdisciplinary categories like `cs.HC`?
+**Research question:** does global attention (GPS) disproportionately benefit interdisciplinary categories like `cs.HC`?
 
 ---
 
 ## Environment
 
-Python 3.9+ · PyTorch 2.8 · PyTorch Geometric 2.6 · OGB 1.3 · Apple M1 Max (MPS backend)
+- Python **3.11+**
+- PyTorch / PyTorch Geometric / OGB
+- Matplotlib / Seaborn / scikit-learn
+
+Two supported execution environments:
+
+1. **Local (Apple M1 Max, MPS backend available)**
+   - Use `--device cpu` for **GCN/GAT** (PyG sparse/scatter ops are typically faster and more stable on CPU locally).
+   - Reserve MPS for GPS dense attention workloads in Phase 4.
+2. **Colab (CUDA: H100/A100/T4 fallback)**
+   - Use `--device auto` or `--device cuda`.
+   - Main workflow notebook: `notebooks/02_train_colab.ipynb`.
+
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -18,61 +31,87 @@ pip install -r requirements.txt
 
 ---
 
-## Repo Structure
+## Repository Structure
 
-```
+```text
 project/
-├── configs/          # Hyperparameter YAML files per model
+├── configs/                 # YAML hyperparameters per model
 │   ├── gcn.yaml
 │   ├── gat.yaml
 │   └── gps.yaml
-├── models/           # Model definitions (added in Phases 2–4)
-│   ├── gcn.py
-│   ├── gat.py
-│   └── gps.py
-├── utils/
-│   ├── device.py     # MPS → CUDA → CPU selector + sanity check
-│   ├── metrics.py    # OGB evaluator wrapper, per-class accuracy
-│   └── viz.py        # Plotting utilities (Phases 5–6)
-├── notebooks/        # EDA, attention viz, t-SNE (Phases 1, 6)
+├── models/
+│   ├── gcn.py               # Phase 2 baseline
+│   └── gat.py               # Phase 3 baseline
 ├── scripts/
-│   └── train.py      # Training entry point
-├── results/          # Saved metrics, plots, checkpoints
-│   ├── gcn/
-│   ├── gat/
-│   └── gps/
-└── IMPLEMENTATION_GUIDE.md
+│   └── train.py             # Training entry point (GCN/GAT implemented)
+├── utils/
+│   ├── device.py            # Device selection + sanity check + cache management
+│   ├── eda.py               # Dataset loading and EDA helpers
+│   ├── metrics.py           # OGB eval + per-class metrics + JSON saving
+│   └── viz.py               # Training curves and analysis plots
+├── notebooks/
+│   ├── 01_eda.ipynb
+│   ├── 02_train_colab.ipynb
+│   └── 03_colab_evaluate_results.ipynb
+├── results/                 # Metrics, checkpoints, plots
+├── IMPLEMENTATION_GUIDE.md  # Phase-by-phase execution plan
+└── CHANGELOG.md
 ```
 
 ---
 
 ## Quick Start
 
+### 1) Verify device detection
+
 ```bash
-# Verify device detection
 python utils/device.py
-
-# Train GCN (Phase 2+)
-python scripts/train.py --model gcn
-
-# Train GAT with CLI overrides
-python scripts/train.py --model gat --epochs 300 --lr 0.0005
-
-# Train GPS
-python scripts/train.py --model gps
 ```
+
+### 2) Train GCN (local CPU recommended)
+
+```bash
+python scripts/train.py --model gcn --device cpu
+```
+
+### 3) Train GAT (local CPU recommended)
+
+```bash
+python scripts/train.py --model gat --device cpu
+```
+
+### 4) Train with CLI overrides
+
+```bash
+python scripts/train.py --model gat --device cpu --epochs 300 --lr 0.0005
+```
+
+> `scripts/train.py` currently implements **GCN/GAT full-batch training**. GPS integration is planned for Phase 4.
 
 ---
 
-## Implementation Phases
+## Training Outputs
+
+Each run writes artifacts under `results/<model>/`, including:
+
+- `best_model.pt`
+- `metrics.json`
+- `per_class_acc.json`
+- `training_curves.png`
+
+---
+
+## Project Status (Implementation Phases)
 
 | Phase | Status | Goal |
-|-------|--------|------|
+|---|---|---|
 | 0 | ✅ Done | Scaffold, environment, device detection |
-| 1 | ⬜ | Dataset loading & EDA |
-| 2 | ⬜ | GCN baseline (~71%) |
-| 3 | ⬜ | GAT (~73%) |
-| 4 | ⬜ | GPS / Graph Transformer (~79%) |
-| 5 | ⬜ | Per-class comparative analysis |
-| 6 | ⬜ | Attention & embedding visualization |
-| 7 | ⬜ | Report & submission |
+| 1 | ✅ Done | Dataset loading & EDA |
+| 2 | ✅ Done | GCN baseline (~71%) |
+| 3 | ✅ Done | GAT baseline (~73%) |
+| 4 | ⬜ Planned | GPS / Graph Transformer (~79%) |
+| 5 | ⏳ In Progress | Per-class comparative analysis |
+| 6 | ⬜ Planned | Attention & embedding visualization |
+| 7 | ⬜ Planned | Report & submission |
+
+For detailed deliverables and risk mitigation, see `IMPLEMENTATION_GUIDE.md`.

@@ -9,6 +9,7 @@
 - Added Colab comparison notebook `notebooks/03_colab_evaluate_results.ipynb` for overall/per-class model analysis and delta plotting (Phase 5).
 
 ### Changed
+- Refreshed `README.md` with accurate local/Colab environment guidance, current model implementation scope (GCN/GAT in `scripts/train.py`, GPS planned), updated quick-start commands, and phase-status table alignment (Phases 0–5 context).
 - Upgraded `scripts/train.py` from scaffold to full training pipeline with dataset loading, model dispatch, training/eval loops, early stopping, checkpointing, per-class export, and training-curve saving for GCN/GAT (Phases 2–3).
 - Added device override support (`--device {auto,mps,cuda,cpu}`) and config passthrough in `scripts/train.py` for local/Colab backend control (Phase 2 infrastructure).
 - Converted ogbn-arxiv edges to undirected in `scripts/train.py` for stable/accurate full-batch GCN/GAT normalization (Phases 2–3).
