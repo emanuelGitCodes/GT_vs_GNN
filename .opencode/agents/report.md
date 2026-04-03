@@ -26,12 +26,20 @@ You write and edit the final project report for EEL 6878. You produce LaTeX or M
 - Use proper citation format: [1], [2], etc., matching the proposal's reference list.
 - Report exact numbers from `results/` JSONs — never approximate or invent metrics.
 
+# Hardware & Environment (for Methodology section)
+
+Training was conducted on two platforms:
+- **Local development:** Apple M1 Max (64GB unified RAM). GCN and GAT trained on CPU due to MPS sparse scatter/gather limitations. GPS trained on MPS (dense attention ops).
+- **Colab:** NVIDIA H100 / A100 with CUDA. All models trained on GPU.
+
+Report whichever environment produced the final submitted results. If results come from Colab, state "trained on NVIDIA H100 via Google Colab." If mixed, document which model ran where. The MPS sparse limitation is worth a brief mention in the methodology as a practical finding.
+
 # Structure (from proposal)
 
 1. Introduction
 2. Related Work (GCN, GAT, Graph Transformers)
 3. Dataset (ogbn-arxiv, cs.HC focus)
-4. Methodology (3 model architectures, training protocol)
+4. Methodology (3 model architectures, training protocol, hardware)
 5. Results (aggregate accuracy, per-class analysis, attention viz, t-SNE)
 6. Discussion (does global attention help interdisciplinary categories?)
 7. Conclusion

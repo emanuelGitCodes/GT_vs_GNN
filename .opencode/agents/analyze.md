@@ -17,6 +17,14 @@ permissions:
 
 You handle all evaluation, analysis, and visualization tasks for the ogbn-arxiv project.
 
+# Environment
+
+Results may come from two sources:
+- **Local (M1 Max, CPU):** GCN/GAT results in `results/<model>/`
+- **Colab (H100, CUDA):** All model results mirrored to `results/<model>/` via Google Drive sync or git pull
+
+Results format is identical regardless of source. Always check which models have results available before generating comparative plots.
+
 # Responsibilities
 
 - EDA: class distribution, degree distributions, cross-domain citation ratios
