@@ -17,6 +17,7 @@ import torch.nn.functional as F
 import yaml
 from torch import Tensor
 from torch_geometric.data import Data
+from torch_geometric.utils import to_undirected
 
 # Make sure the project root is on sys.path when running as a script
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -83,6 +84,13 @@ def parse_args() -> argparse.Namespace:
         help="Early-stopping patience (epochs without val improvement).",
     )
     parser.add_argument("--seed", type=int, default=None, help="Random seed.")
+    parser.add_argument(
+        "--device",
+        type=str,
+        choices=["auto", "mps", "cuda", "cpu"],
+        default=None,
+        help="Device backend override. 'auto' uses MPS → CUDA → CPU.",
+    )
 
     # Output
     parser.add_argument(
@@ -125,6 +133,7 @@ def load_config(args: argparse.Namespace) -> dict:
         "weight_decay": args.weight_decay,
         "patience": args.patience,
         "seed": args.seed,
+        "device": args.device,
     }
     for key, val in cli_overrides.items():
         if val is not None:
@@ -253,7 +262,7 @@ def main() -> None:
     set_seed(cfg["seed"])
 
     # Device setup
-    requested_device = get_device()
+    requested_device = get_device(str(cfg.get("device", "auto")))
     sanity_check(requested_device)
     device = requested_device
 
@@ -264,6 +273,10 @@ def main() -> None:
 
     # Load ogbn-arxiv dataset
     data, split_idx, dataset, _ = load_dataset(root=PROJECT_ROOT / "data")
+
+    # ogbn-arxiv is directed (citation graph). GCN's symmetric normalization
+    # assumes an undirected adjacency matrix, so we convert once up front.
+    data.edge_index = to_undirected(data.edge_index, num_nodes=data.num_nodes)
 
     cfg.setdefault("in_channels", int(data.x.size(1)))
     cfg.setdefault("num_classes", int(dataset.num_classes))
@@ -280,6 +293,7 @@ def main() -> None:
         )
 
     data = data.to(device)
+    split_idx = {k: v.to(device) for k, v in split_idx.items()}
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=float(cfg["lr"]),
@@ -318,6 +332,7 @@ def main() -> None:
                 device = torch.device("cpu")
                 model = model.to(device)
                 data = data.to(device)
+                split_idx = {k: v.to(device) for k, v in split_idx.items()}
                 train_loss, train_acc = train_epoch(model, data, split_idx, optimizer)
                 val_acc = evaluate(
                     model=model,

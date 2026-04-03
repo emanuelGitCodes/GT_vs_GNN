@@ -1,27 +1,78 @@
-"""Device selection utility: MPS → CUDA → CPU priority order.
+"""Device selection utility with optional backend override.
 
 Usage
 -----
     from utils.device import get_device, sanity_check
 
-    device = get_device()
+    device = get_device("auto")
     sanity_check(device)
 """
+
+from __future__ import annotations
+
+from typing import Literal
 
 import torch
 
 
-def get_device() -> torch.device:
-    """Return the best available device: MPS → CUDA → CPU.
+DevicePreference = Literal["auto", "mps", "cuda", "cpu"]
 
-    Never hardcode 'mps' or 'cuda' elsewhere in the codebase — always call
-    this function so the code runs on any machine.
+
+def get_device(preference: DevicePreference = "auto") -> torch.device:
+    """Return the selected device with optional manual override.
+
+    Parameters
+    ----------
+    preference:
+        One of ``{"auto", "mps", "cuda", "cpu"}``.
+        - ``auto``: MPS → CUDA → CPU fallback priority.
+        - ``mps`` / ``cuda`` / ``cpu``: force a specific backend.
+
+    Raises
+    ------
+    RuntimeError
+        If a forced backend is requested but not available.
     """
-    if torch.backends.mps.is_available():
+
+    if preference == "auto":
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        return torch.device("cpu")
+
+    if preference == "mps":
+        if not torch.backends.mps.is_available():
+            raise RuntimeError("Requested device 'mps' is not available.")
         return torch.device("mps")
-    if torch.cuda.is_available():
+
+    if preference == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("Requested device 'cuda' is not available.")
         return torch.device("cuda")
-    return torch.device("cpu")
+
+    if preference == "cpu":
+        return torch.device("cpu")
+
+    raise ValueError(f"Unsupported device preference: {preference}")
+
+
+def _current_memory_mb(device: torch.device) -> float:
+    """Return allocated memory on the requested device in MB."""
+    if device.type == "mps":
+        return float(torch.mps.current_allocated_memory() / 1e6)
+    if device.type == "cuda":
+        return float(torch.cuda.memory_allocated(device=device) / 1e6)
+    return 0.0
+
+
+def _memory_info(device: torch.device) -> str:
+    """Return a short allocated-memory info string for logs."""
+    if device.type in {"mps", "cuda"}:
+        return (
+            f"  |  {device.type.upper()} allocated: {_current_memory_mb(device):.2f} MB"
+        )
+    return ""
 
 
 def sanity_check(device: torch.device) -> None:
@@ -39,10 +90,7 @@ def sanity_check(device: torch.device) -> None:
     y = torch.matmul(x, x.T)
     assert y.shape == (64, 64), f"Unexpected output shape: {y.shape}"
 
-    mem_info = ""
-    if device.type == "mps":
-        allocated_mb = torch.mps.current_allocated_memory() / 1e6
-        mem_info = f"  |  MPS allocated: {allocated_mb:.2f} MB"
+    mem_info = _memory_info(device)
 
     print(f"[device] Backend: {device}{mem_info}  |  Sanity matmul OK ✓")
 
@@ -59,5 +107,5 @@ def empty_cache(device: torch.device) -> None:
 
 
 if __name__ == "__main__":
-    _device = get_device()
+    _device = get_device("auto")
     sanity_check(_device)
