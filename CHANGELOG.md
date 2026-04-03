@@ -23,6 +23,9 @@
 - Updated configs with explicit input/output dimensions in `configs/gcn.yaml` and `configs/gat.yaml` (Phases 2–3).
 
 ### Fixed
+- Fixed incorrect `REPO_DIR = "/content/codebase"` in `notebooks/02_train_colab.ipynb` Cell 2; corrected to `"/content/GT_vs_GNN"` to match the actual cloned repo folder name (Phase 1).
+- Added PyTorch version guard in Cell 5 of `notebooks/02_train_colab.ipynb` that raises a clear `RuntimeError` if the runtime was not restarted after the Cell 1 pip install, preventing silent use of the wrong PyTorch version (Phase 1).
+- Added Cell 5b in `notebooks/02_train_colab.ipynb` to wipe `data/ogbn_arxiv/processed/` before dataset load, eliminating stale `.pt` cache files written under PyTorch>=2.6 that cause `UnpicklingError` when read back under 2.5.1 (Phase 1).
 - Fixed `UnpicklingError` during `PygNodePropPredDataset` initialization on Colab by avoiding PyTorch>=2.6 `weights_only=True` default behavior via version pinning in `notebooks/02_train_colab.ipynb` (Phase 1).
 - Fixed Colab setup failure mode where git commands ran against a non-repository path and notebook continued to `/`, by adding explicit runtime errors in `notebooks/02_train_colab.ipynb` (Phase 1).
 - Resolved severe GCN underperformance by correcting graph preprocessing to undirected adjacency before message passing in `scripts/train.py`; restored expected baseline behavior (~71% test range) (Phase 2).
