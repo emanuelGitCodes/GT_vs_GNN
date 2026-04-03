@@ -9,6 +9,8 @@
 - Added Colab comparison notebook `notebooks/03_colab_evaluate_results.ipynb` for overall/per-class model analysis and delta plotting (Phase 5).
 
 ### Changed
+- Pinned Colab install in `notebooks/02_train_colab.ipynb` to `torch==2.5.1`, `torchvision==0.20.1`, and `torchaudio==2.5.1` (CUDA 12.1) to keep OGB dataset loading compatible across Colab sessions (Phase 1).
+- Aligned core framework pins in `requirements.txt` to PyTorch 2.5.1 / torchvision 0.20.1 / torchaudio 2.5.1 for consistent environment resolution with notebook workflows (Phase 1).
 - Updated `notebooks/02_train_colab.ipynb` repository settings cell to authenticate private-clone access via Colab secret `GH_PAT` and explicit repo owner defaults (Phase 1).
 - Hardened Colab clone/pull cell in `notebooks/02_train_colab.ipynb` with non-git directory detection and guarded project root entry to prevent false `Working directory: /` states (Phase 1).
 - Refreshed `README.md` with accurate local/Colab environment guidance, current model implementation scope (GCN/GAT in `scripts/train.py`, GPS planned), updated quick-start commands, and phase-status table alignment (Phases 0–5 context).
@@ -21,5 +23,6 @@
 - Updated configs with explicit input/output dimensions in `configs/gcn.yaml` and `configs/gat.yaml` (Phases 2–3).
 
 ### Fixed
+- Fixed `UnpicklingError` during `PygNodePropPredDataset` initialization on Colab by avoiding PyTorch>=2.6 `weights_only=True` default behavior via version pinning in `notebooks/02_train_colab.ipynb` (Phase 1).
 - Fixed Colab setup failure mode where git commands ran against a non-repository path and notebook continued to `/`, by adding explicit runtime errors in `notebooks/02_train_colab.ipynb` (Phase 1).
 - Resolved severe GCN underperformance by correcting graph preprocessing to undirected adjacency before message passing in `scripts/train.py`; restored expected baseline behavior (~71% test range) (Phase 2).
