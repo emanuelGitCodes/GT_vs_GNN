@@ -2,6 +2,8 @@
 # Target: ~71% test accuracy on ogbn-arxiv (OGB leaderboard reference)
 
 model: gcn
+in_channels: 128
+num_classes: 40
 hidden_dim: 256
 num_layers: 3
 dropout: 0.5

@@ -26,11 +26,31 @@ def plot_training_curves(
     model_name: str,
     save_path: Optional[Path] = None,
 ) -> None:
-    """Plot train/val accuracy curves over epochs.
+    """Plot train/val accuracy curves over epochs."""
+    if len(train_accs) == 0 or len(val_accs) == 0:
+        raise ValueError("train_accs and val_accs must be non-empty")
+    if len(train_accs) != len(val_accs):
+        raise ValueError("train_accs and val_accs must have equal length")
 
-    Implemented in Phase 2 once the training loop exists.
-    """
-    raise NotImplementedError("plot_training_curves — implemented in Phase 2")
+    epochs = list(range(1, len(train_accs) + 1))
+
+    plt.figure(figsize=(8, 5))
+    plt.plot(epochs, train_accs, label="Train Accuracy", linewidth=2)
+    plt.plot(epochs, val_accs, label="Validation Accuracy", linewidth=2)
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title(f"{model_name.upper()} Training Curves")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(save_path, dpi=300)
+        print(f"[viz] Saved training curves → {save_path}")
+
+    plt.close()
 
 
 # ---------------------------------------------------------------------------

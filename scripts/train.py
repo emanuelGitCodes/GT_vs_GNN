@@ -1,18 +1,6 @@
 """train.py — Training entry point for GCN / GAT / GPS on ogbn-arxiv.
 
-Phase 0: Skeleton with argparse + device detection.
-         Model instantiation and training loop added in Phases 2–4.
-
-Example usage
--------------
-    # Use defaults from configs/gcn.yaml
-    python scripts/train.py --model gcn
-
-    # Override specific hyperparameters via CLI
-    python scripts/train.py --model gps --epochs 200 --lr 0.0005 --seed 0
-
-    # Point to a custom config file
-    python scripts/train.py --model gat --config configs/gat.yaml
+Phase 2 implements the full GCN baseline training pipeline.
 """
 
 from __future__ import annotations
@@ -21,17 +9,29 @@ import argparse
 import random
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 import yaml
+from torch import Tensor
+from torch_geometric.data import Data
 
 # Make sure the project root is on sys.path when running as a script
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from utils.device import get_device, sanity_check  # noqa: E402
+from utils.device import empty_cache, get_device, sanity_check  # noqa: E402
+from utils.eda import load_dataset  # noqa: E402
+from utils.metrics import (  # noqa: E402
+    eval_acc,
+    get_evaluator,
+    per_class_accuracy,
+    save_metrics,
+)
+from utils.viz import plot_training_curves  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -158,6 +158,82 @@ def set_seed(seed: int) -> None:
     print(f"[seed] Random seed set to {seed}")
 
 
+def _is_mps_scatter_error(error: Exception) -> bool:
+    """Return True when the exception likely indicates an MPS sparse/scatter gap."""
+    message = str(error).lower()
+    markers = ["mps", "scatter", "sparse", "not implemented"]
+    return any(marker in message for marker in markers)
+
+
+def train_epoch(
+    model: torch.nn.Module,
+    data: Data,
+    split_idx: dict[str, Tensor],
+    optimizer: torch.optim.Optimizer,
+) -> tuple[float, float]:
+    """Run one training epoch and return (loss, train_acc)."""
+    model.train()
+    optimizer.zero_grad()
+
+    out = model(data.x, data.edge_index)
+    train_idx = split_idx["train"]
+    y_train = data.y[train_idx].view(-1)
+    loss = F.cross_entropy(out[train_idx], y_train)
+    loss.backward()
+    optimizer.step()
+
+    with torch.no_grad():
+        pred = out[train_idx].argmax(dim=-1)
+        train_acc = float((pred == y_train).float().mean().item())
+
+    return float(loss.item()), train_acc
+
+
+@torch.no_grad()
+def evaluate(
+    model: torch.nn.Module,
+    data: Data,
+    split_idx: dict[str, Tensor],
+    evaluator: Any,
+    split_name: str,
+    device: torch.device,
+) -> float:
+    """Evaluate model accuracy on a split using OGB evaluator."""
+    model.eval()
+    idx = split_idx[split_name]
+
+    out = model(data.x, data.edge_index)
+    y_pred = out[idx].argmax(dim=-1).cpu()
+    y_true = data.y[idx].view(-1).cpu()
+    acc = float(eval_acc(evaluator, y_pred, y_true))
+
+    # Required for MPS memory stability after evaluation loops.
+    empty_cache(device)
+    return acc
+
+
+@torch.no_grad()
+def evaluate_with_predictions(
+    model: torch.nn.Module,
+    data: Data,
+    split_idx: dict[str, Tensor],
+    evaluator: Any,
+    device: torch.device,
+) -> tuple[float, Tensor, Tensor]:
+    """Evaluate test split and return (acc, y_pred, y_true)."""
+    model.eval()
+    test_idx = split_idx["test"]
+    out = model(data.x, data.edge_index)
+
+    y_pred = out[test_idx].argmax(dim=-1).cpu()
+    y_true = data.y[test_idx].view(-1).cpu()
+    test_acc = float(eval_acc(evaluator, y_pred, y_true))
+
+    # Required for MPS memory stability after evaluation loops.
+    empty_cache(device)
+    return test_acc, y_pred, y_true
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -177,79 +253,155 @@ def main() -> None:
     set_seed(cfg["seed"])
 
     # Device setup
-    device = get_device()
-    sanity_check(device)
+    requested_device = get_device()
+    sanity_check(requested_device)
+    device = requested_device
 
     # Ensure results directory exists
     results_dir: Path = cfg["results_dir"]
     results_dir.mkdir(parents=True, exist_ok=True)
     print(f"[output] Results will be saved to: {results_dir}")
 
-    # ------------------------------------------------------------------
-    # TODO (Phase 1): Load ogbn-arxiv dataset
-    #   from ogb.nodeproppred import PygNodePropPredDataset
-    #   dataset = PygNodePropPredDataset(name="ogbn-arxiv", root="data/")
-    #   data = dataset[0]
-    #   split_idx = dataset.get_idx_split()
-    # ------------------------------------------------------------------
+    # Load ogbn-arxiv dataset
+    data, split_idx, dataset, _ = load_dataset(root=PROJECT_ROOT / "data")
 
-    # ------------------------------------------------------------------
-    # TODO (Phase 2): Instantiate and train GCN
-    #   from models.gcn import GCN
-    #   model = GCN(cfg).to(device)
-    # ------------------------------------------------------------------
+    cfg.setdefault("in_channels", int(data.x.size(1)))
+    cfg.setdefault("num_classes", int(dataset.num_classes))
 
-    # ------------------------------------------------------------------
-    # TODO (Phase 3): Instantiate and train GAT
-    #   from models.gat import GAT
-    #   model = GAT(cfg).to(device)
-    # ------------------------------------------------------------------
+    # Model instantiation (Phase 2)
+    if cfg["model"] == "gcn":
+        from models.gcn import GCN
 
-    # ------------------------------------------------------------------
-    # TODO (Phase 4): Instantiate and train GPS
-    #   from models.gps import GPS
-    #   model = GPS(cfg).to(device)
-    # ------------------------------------------------------------------
+        model = GCN(cfg).to(device)
+    else:
+        raise NotImplementedError(
+            f"Model '{cfg['model']}' is not implemented in train.py yet. "
+            "Phase 2 currently supports --model gcn."
+        )
 
-    # ------------------------------------------------------------------
-    # TODO (Phase 2–4): Training loop skeleton
-    #
-    #   optimizer = torch.optim.Adam(model.parameters(),
-    #                                lr=cfg["lr"],
-    #                                weight_decay=cfg["weight_decay"])
-    #   evaluator = get_evaluator()
-    #   writer = SummaryWriter(log_dir=results_dir / "tb_logs")
-    #
-    #   best_val_acc, patience_counter = 0.0, 0
-    #   for epoch in range(1, cfg["epochs"] + 1):
-    #       train_loss = train_epoch(model, data, optimizer, device)
-    #       val_acc    = evaluate(model, data, split_idx["valid"], evaluator, device)
-    #
-    #       if epoch % 10 == 0:
-    #           print(f"Epoch {epoch:04d} | loss {train_loss:.4f} | val {val_acc:.4f}")
-    #
-    #       writer.add_scalar("Loss/train", train_loss, epoch)
-    #       writer.add_scalar("Acc/val",    val_acc,    epoch)
-    #
-    #       # Early stopping
-    #       if val_acc > best_val_acc:
-    #           best_val_acc = val_acc
-    #           patience_counter = 0
-    #           torch.save(model.state_dict(), results_dir / "best_model.pt")
-    #       else:
-    #           patience_counter += 1
-    #           if patience_counter >= cfg["patience"]:
-    #               print(f"Early stopping at epoch {epoch}")
-    #               break
-    #
-    #   # Final test evaluation
-    #   model.load_state_dict(torch.load(results_dir / "best_model.pt"))
-    #   test_acc = evaluate(model, data, split_idx["test"], evaluator, device)
-    #   print(f"Test accuracy: {test_acc:.4f}")
-    #   save_metrics({"test_acc": test_acc, ...}, results_dir)
-    # ------------------------------------------------------------------
+    data = data.to(device)
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=float(cfg["lr"]),
+        weight_decay=float(cfg["weight_decay"]),
+    )
+    evaluator = get_evaluator("ogbn-arxiv")
 
-    print("\n[train.py] Phase 0 scaffold complete. Training loop added in Phases 2–4.")
+    best_val_acc = 0.0
+    best_epoch = 0
+    patience_counter = 0
+    train_losses: list[float] = []
+    train_accs: list[float] = []
+    val_accs: list[float] = []
+
+    checkpoint_path = results_dir / "best_model.pt"
+
+    for epoch in range(1, int(cfg["epochs"]) + 1):
+        try:
+            train_loss, train_acc = train_epoch(model, data, split_idx, optimizer)
+            val_acc = evaluate(
+                model=model,
+                data=data,
+                split_idx=split_idx,
+                evaluator=evaluator,
+                split_name="valid",
+                device=device,
+            )
+        except (RuntimeError, NotImplementedError) as error:
+            if device.type == "mps" and _is_mps_scatter_error(error):
+                # MPS can fail on some PyG sparse/scatter kernels.
+                # We fall back to CPU to keep training functional.
+                print(
+                    "[warn] MPS sparse/scatter op issue detected. "
+                    "Falling back to CPU for training."
+                )
+                device = torch.device("cpu")
+                model = model.to(device)
+                data = data.to(device)
+                train_loss, train_acc = train_epoch(model, data, split_idx, optimizer)
+                val_acc = evaluate(
+                    model=model,
+                    data=data,
+                    split_idx=split_idx,
+                    evaluator=evaluator,
+                    split_name="valid",
+                    device=device,
+                )
+            else:
+                raise
+
+        train_losses.append(train_loss)
+        train_accs.append(train_acc)
+        val_accs.append(val_acc)
+
+        if epoch % 10 == 0:
+            print(
+                f"Epoch {epoch:04d} | "
+                f"loss {train_loss:.4f} | "
+                f"train {train_acc:.4f} | "
+                f"val {val_acc:.4f}"
+            )
+
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
+            best_epoch = epoch
+            patience_counter = 0
+            torch.save(model.state_dict(), checkpoint_path)
+        else:
+            patience_counter += 1
+            if patience_counter >= int(cfg["patience"]):
+                print(f"[early-stop] No val improvement for {cfg['patience']} epochs.")
+                print(f"[early-stop] Stopping at epoch {epoch}.")
+                break
+
+    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+    test_acc, y_pred_test, y_true_test = evaluate_with_predictions(
+        model=model,
+        data=data,
+        split_idx=split_idx,
+        evaluator=evaluator,
+        device=device,
+    )
+    per_class = per_class_accuracy(
+        y_pred=y_pred_test,
+        y_true=y_true_test,
+        num_classes=int(cfg["num_classes"]),
+    )
+
+    plot_training_curves(
+        train_accs=train_accs,
+        val_accs=val_accs,
+        model_name=cfg["model"],
+        save_path=results_dir / "training_curves.png",
+    )
+
+    save_metrics(
+        metrics={
+            "model": cfg["model"],
+            "best_val_acc": best_val_acc,
+            "best_epoch": best_epoch,
+            "test_acc": test_acc,
+            "epochs_ran": len(train_losses),
+            "train_loss": train_losses,
+            "train_acc": train_accs,
+            "val_acc": val_accs,
+        },
+        save_dir=results_dir,
+        filename="metrics.json",
+    )
+    save_metrics(
+        metrics={str(k): v for k, v in per_class.items()},
+        save_dir=results_dir,
+        filename="per_class_acc.json",
+    )
+
+    print("\n[phase-2] Training complete.")
+    print(
+        f"[phase-2] Best validation accuracy: {best_val_acc:.4f} (epoch {best_epoch})"
+    )
+    print(f"[phase-2] Test accuracy: {test_acc:.4f}")
+    print(f"[phase-2] Checkpoint: {checkpoint_path}")
+    print(f"[phase-2] Per-class metrics: {results_dir / 'per_class_acc.json'}")
 
 
 if __name__ == "__main__":
