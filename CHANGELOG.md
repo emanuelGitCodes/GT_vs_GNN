@@ -9,6 +9,9 @@
 - Added Colab comparison notebook `notebooks/03_colab_evaluate_results.ipynb` for overall/per-class model analysis and delta plotting (Phase 5).
 
 ### Changed
+- Reworked Phase 3 GAT architecture in `models/gat.py` to use per-head hidden sizing plus BatchNorm and residual connections for more stable optimization on ogbn-arxiv (Phase 3).
+- Tuned default GAT hyperparameters in `configs/gat.yaml` (hidden_dim per-head, dropout/lr/weight_decay/patience) to better match the revised architecture capacity and convergence behavior (Phase 3).
+- Updated graph preprocessing logic in `scripts/train.py` to apply `to_undirected` only for GCN while preserving directed citation edges for GAT runs (Phases 2–3).
 - Pinned Colab install in `notebooks/02_train_colab.ipynb` to `torch==2.5.1`, `torchvision==0.20.1`, and `torchaudio==2.5.1` (CUDA 12.1) to keep OGB dataset loading compatible across Colab sessions (Phase 1).
 - Aligned core framework pins in `requirements.txt` to PyTorch 2.5.1 / torchvision 0.20.1 / torchaudio 2.5.1 for consistent environment resolution with notebook workflows (Phase 1).
 - Updated `notebooks/02_train_colab.ipynb` repository settings cell to authenticate private-clone access via Colab secret `GH_PAT` and explicit repo owner defaults (Phase 1).

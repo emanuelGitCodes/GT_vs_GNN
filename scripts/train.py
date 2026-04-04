@@ -282,9 +282,11 @@ def main() -> None:
     # Load ogbn-arxiv dataset
     data, split_idx, dataset, _ = load_dataset(root=PROJECT_ROOT / "data")
 
-    # ogbn-arxiv is directed (citation graph). Our full-batch GCN/GAT baselines
-    # use the commonly adopted undirected variant for stable message passing.
-    data.edge_index = to_undirected(data.edge_index, num_nodes=data.num_nodes)
+    # ogbn-arxiv is directed (citation graph).
+    # - GCN baseline uses an undirected view for stable symmetric normalization.
+    # - GAT baseline keeps edge direction to preserve citation flow.
+    if cfg["model"] == "gcn":
+        data.edge_index = to_undirected(data.edge_index, num_nodes=data.num_nodes)
 
     cfg.setdefault("in_channels", int(data.x.size(1)))
     cfg.setdefault("num_classes", int(dataset.num_classes))

@@ -5,19 +5,19 @@
 model: gat
 in_channels: 128
 num_classes: 40
-hidden_dim: 256
+hidden_dim: 128   # per-head hidden width; total hidden = hidden_dim * num_heads
 num_layers: 3
 num_heads: 8        # attention heads for hidden layers
 out_heads: 1        # single head on the output layer
-dropout: 0.5
+dropout: 0.3
 
 # Optimizer
-lr: 0.001
-weight_decay: 0.0005
+lr: 0.003
+weight_decay: 0.0
 
 # Training schedule
 epochs: 500
-patience: 50   # early stopping on validation accuracy
+patience: 80   # early stopping on validation accuracy
 
 # Reproducibility
 seed: 42
