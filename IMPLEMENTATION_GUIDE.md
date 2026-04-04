@@ -5,6 +5,7 @@
 
 ---
 
+# Thisis a test
 ## Phase 0: Project Scaffold & Environment
 
 **Goal:** Reproducible environment, clean repo structure, device detection utility.
