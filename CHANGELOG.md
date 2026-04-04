@@ -26,6 +26,7 @@
 - Updated configs with explicit input/output dimensions in `configs/gcn.yaml` and `configs/gat.yaml` (Phases 2–3).
 
 ### Fixed
+- Restored undirected edge preprocessing for GAT in `scripts/train.py` (same as GCN) after directed-edge training caused major Phase 3 accuracy regression on Colab.
 - Fixed Colab git commit failure (`exit status 128`) in `notebooks/02_train_colab.ipynb` by configuring `git config user.name/user.email` inside `push_results_to_github` before committing (Phase 1).
 - Removed interactive username/PAT prompts from `push_results_to_github` and reused `GH_USER` + `GH_PAT` loaded in Cell 2, making Cell 11 one-step and non-interactive for secret-based auth (Phase 1).
 - Fixed incorrect `REPO_DIR = "/content/codebase"` in `notebooks/02_train_colab.ipynb` Cell 2; corrected to `"/content/GT_vs_GNN"` to match the actual cloned repo folder name (Phase 1).
