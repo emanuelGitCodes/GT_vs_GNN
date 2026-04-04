@@ -41,9 +41,10 @@ project/
 │   └── gps.yaml
 ├── models/
 │   ├── gcn.py               # Phase 2 baseline
-│   └── gat.py               # Phase 3 baseline
+│   ├── gat.py               # Phase 3 baseline
+│   └── gps.py               # Phase 4 baseline
 ├── scripts/
-│   └── train.py             # Training entry point (GCN/GAT implemented)
+│   └── train.py             # Training entry point (GCN/GAT/GPS implemented)
 ├── utils/
 │   ├── device.py            # Device selection + sanity check + cache management
 │   ├── eda.py               # Dataset loading and EDA helpers
@@ -86,7 +87,13 @@ python scripts/train.py --model gat --device cpu
 python scripts/train.py --model gat --device cpu --epochs 300 --lr 0.0005
 ```
 
-> `scripts/train.py` currently implements **GCN/GAT full-batch training**. GPS integration is planned for Phase 4.
+### 5) Train GPS (Colab CUDA recommended)
+
+```bash
+python scripts/train.py --model gps --device auto
+```
+
+> GPS uses Laplacian positional encoding + ClusterLoader mini-batching. Ensure `pyg-lib` or `torch-sparse` is installed in your runtime.
 
 ---
 
@@ -109,8 +116,8 @@ Each run writes artifacts under `results/<model>/`, including:
 | 1 | ✅ Done | Dataset loading & EDA |
 | 2 | ✅ Done | GCN baseline (~71%) |
 | 3 | ✅ Done | GAT baseline (~73%) |
-| 4 | ⬜ Planned | GPS / Graph Transformer (~79%) |
-| 5 | ⏳ In Progress | Per-class comparative analysis |
+| 4 | ⏳ In Progress | GPS / Graph Transformer (~79%) |
+| 5 | ⬜ Planned | Per-class comparative analysis |
 | 6 | ⬜ Planned | Attention & embedding visualization |
 | 7 | ⬜ Planned | Report & submission |
 

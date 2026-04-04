@@ -17,6 +17,9 @@ import torch.nn.functional as F
 import yaml
 from torch import Tensor
 from torch_geometric.data import Data
+from torch_geometric.loader import ClusterData, ClusterLoader
+from torch_geometric.transforms import AddLaplacianEigenvectorPE
+from torch_geometric.typing import WITH_PYG_LIB, WITH_TORCH_SPARSE
 from torch_geometric.utils import to_undirected
 
 # Make sure the project root is on sys.path when running as a script
@@ -251,6 +254,228 @@ def evaluate_with_predictions(
     return test_acc, y_pred, y_true
 
 
+def build_split_masks(data: Data, split_idx: dict[str, Tensor]) -> None:
+    """Attach boolean train/valid/test masks to *data* from split indices."""
+    num_nodes = int(data.num_nodes)
+    for split_name in ("train", "valid", "test"):
+        mask = torch.zeros(num_nodes, dtype=torch.bool)
+        mask[split_idx[split_name].cpu()] = True
+        setattr(data, f"{split_name}_mask", mask)
+
+
+def lap_pe_cache_path(root: Path, lap_pe_k: int) -> Path:
+    """Return cache path for Laplacian positional encodings."""
+    return root / "processed" / f"ogbn_arxiv_lap_pe_k{lap_pe_k}.pt"
+
+
+def add_or_load_laplacian_pe(data: Data, root: Path, lap_pe_k: int) -> Data:
+    """Attach cached Laplacian PE (or compute it once and cache)."""
+    cache_path = lap_pe_cache_path(root=root, lap_pe_k=lap_pe_k)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+    lap_pe: Tensor | None = None
+    if cache_path.exists():
+        cached = torch.load(cache_path, map_location="cpu")
+        if isinstance(cached, torch.Tensor):
+            lap_pe = cached
+
+    if (
+        lap_pe is None
+        or lap_pe.size(0) != int(data.num_nodes)
+        or lap_pe.size(1) != lap_pe_k
+    ):
+        transform = AddLaplacianEigenvectorPE(
+            k=lap_pe_k,
+            attr_name="lap_pe",
+            is_undirected=True,
+        )
+        pe_data = Data(edge_index=data.edge_index, num_nodes=data.num_nodes)
+        pe_data = transform(pe_data)
+        lap_pe = pe_data.lap_pe.to(torch.float32)
+        torch.save(lap_pe, cache_path)
+        print(f"[phase-4] Computed and cached LapPE → {cache_path}")
+    else:
+        lap_pe = lap_pe.to(torch.float32)
+        print(f"[phase-4] Loaded cached LapPE → {cache_path}")
+
+    data.lap_pe = lap_pe
+    return data
+
+
+def build_cluster_loaders(
+    data: Data,
+    cfg: dict,
+    cache_dir: Path,
+) -> tuple[ClusterLoader, ClusterLoader]:
+    """Build ClusterLoader instances for GPS train/eval."""
+    if not (WITH_PYG_LIB or WITH_TORCH_SPARSE):
+        raise ImportError(
+            "GPS training requires 'pyg-lib' or 'torch-sparse' for ClusterData. "
+            "Install matching CUDA wheels in Colab before running --model gps."
+        )
+
+    num_parts = int(cfg.get("num_parts", 160))
+    cluster_batch_size = int(cfg.get("cluster_batch_size", 1))
+    recursive = bool(cfg.get("cluster_recursive", False))
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"ogbn_arxiv_cluster_parts_{num_parts}_r{int(recursive)}.pt"
+
+    cluster_data = ClusterData(
+        data=data,
+        num_parts=num_parts,
+        recursive=recursive,
+        save_dir=str(cache_dir),
+        filename=filename,
+        log=True,
+    )
+
+    train_loader = ClusterLoader(
+        cluster_data,
+        batch_size=cluster_batch_size,
+        shuffle=True,
+    )
+    eval_loader = ClusterLoader(
+        cluster_data,
+        batch_size=cluster_batch_size,
+        shuffle=False,
+    )
+    return train_loader, eval_loader
+
+
+def train_epoch_gps(
+    model: torch.nn.Module,
+    loader: ClusterLoader,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+) -> tuple[float, float]:
+    """Run one GPS mini-batch epoch and return (loss, train_acc)."""
+    model.train()
+    total_loss = 0.0
+    total_correct = 0
+    total_examples = 0
+
+    for batch in loader:
+        batch = batch.to(device)
+        train_mask = batch.train_mask
+        if int(train_mask.sum().item()) == 0:
+            continue
+
+        optimizer.zero_grad()
+        batch_vector = getattr(batch, "batch", None)
+        out = model(
+            x=batch.x,
+            edge_index=batch.edge_index,
+            lap_pe=batch.lap_pe,
+            batch=batch_vector,
+        )
+
+        y_train = batch.y[train_mask].view(-1)
+        logits = out[train_mask]
+        loss = F.cross_entropy(logits, y_train)
+        loss.backward()
+        optimizer.step()
+
+        n = int(train_mask.sum().item())
+        total_loss += float(loss.item()) * n
+        pred = logits.argmax(dim=-1)
+        total_correct += int((pred == y_train).sum().item())
+        total_examples += n
+
+    if total_examples == 0:
+        return 0.0, 0.0
+    return total_loss / total_examples, total_correct / total_examples
+
+
+def split_mask_attr(split_name: str) -> str:
+    """Map split name to Data mask attribute name."""
+    if split_name not in {"train", "valid", "test"}:
+        raise ValueError(f"Unsupported split: {split_name}")
+    return f"{split_name}_mask"
+
+
+@torch.no_grad()
+def evaluate_gps(
+    model: torch.nn.Module,
+    loader: ClusterLoader,
+    evaluator: Any,
+    split_name: str,
+    device: torch.device,
+) -> float:
+    """Evaluate GPS accuracy for a split using mini-batches."""
+    model.eval()
+    mask_name = split_mask_attr(split_name)
+    preds: list[Tensor] = []
+    trues: list[Tensor] = []
+
+    for batch in loader:
+        batch = batch.to(device)
+        batch_vector = getattr(batch, "batch", None)
+        out = model(
+            x=batch.x,
+            edge_index=batch.edge_index,
+            lap_pe=batch.lap_pe,
+            batch=batch_vector,
+        )
+
+        mask = getattr(batch, mask_name)
+        if int(mask.sum().item()) == 0:
+            continue
+
+        preds.append(out[mask].argmax(dim=-1).cpu())
+        trues.append(batch.y[mask].view(-1).cpu())
+
+    if not preds:
+        empty_cache(device)
+        return 0.0
+
+    y_pred = torch.cat(preds, dim=0)
+    y_true = torch.cat(trues, dim=0)
+    acc = float(eval_acc(evaluator, y_pred, y_true))
+    empty_cache(device)
+    return acc
+
+
+@torch.no_grad()
+def evaluate_with_predictions_gps(
+    model: torch.nn.Module,
+    loader: ClusterLoader,
+    evaluator: Any,
+    device: torch.device,
+) -> tuple[float, Tensor, Tensor]:
+    """Evaluate GPS test split and return (acc, y_pred, y_true)."""
+    model.eval()
+    preds: list[Tensor] = []
+    trues: list[Tensor] = []
+
+    for batch in loader:
+        batch = batch.to(device)
+        batch_vector = getattr(batch, "batch", None)
+        out = model(
+            x=batch.x,
+            edge_index=batch.edge_index,
+            lap_pe=batch.lap_pe,
+            batch=batch_vector,
+        )
+
+        mask = batch.test_mask
+        if int(mask.sum().item()) == 0:
+            continue
+
+        preds.append(out[mask].argmax(dim=-1).cpu())
+        trues.append(batch.y[mask].view(-1).cpu())
+
+    if not preds:
+        empty_cache(device)
+        return 0.0, torch.empty(0, dtype=torch.long), torch.empty(0, dtype=torch.long)
+
+    y_pred = torch.cat(preds, dim=0)
+    y_true = torch.cat(trues, dim=0)
+    test_acc = float(eval_acc(evaluator, y_pred, y_true))
+    empty_cache(device)
+    return test_acc, y_pred, y_true
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -282,15 +507,15 @@ def main() -> None:
     # Load ogbn-arxiv dataset
     data, split_idx, dataset, _ = load_dataset(root=PROJECT_ROOT / "data")
 
-    # ogbn-arxiv is directed (citation graph). Our full-batch GCN/GAT baselines
-    # use the commonly adopted undirected variant for stable message passing.
-    if cfg["model"] in {"gcn", "gat"}:
+    # ogbn-arxiv is directed (citation graph). Our baselines and GPS pipeline
+    # use an undirected variant for stable message passing and Laplacian PE.
+    if cfg["model"] in {"gcn", "gat", "gps"}:
         data.edge_index = to_undirected(data.edge_index, num_nodes=data.num_nodes)
 
     cfg.setdefault("in_channels", int(data.x.size(1)))
     cfg.setdefault("num_classes", int(dataset.num_classes))
 
-    # Model instantiation (Phases 2–3)
+    # Model instantiation (Phases 2–4)
     if cfg["model"] == "gcn":
         from models.gcn import GCN
 
@@ -299,14 +524,41 @@ def main() -> None:
         from models.gat import GAT
 
         model = GAT(cfg).to(device)
+    elif cfg["model"] == "gps":
+        from models.gps import GPS
+
+        model = GPS(cfg).to(device)
     else:
         raise NotImplementedError(
             f"Model '{cfg['model']}' is not implemented in train.py yet. "
-            "Current support: --model gcn and --model gat."
+            "Current support: --model gcn, --model gat, and --model gps."
         )
 
-    data = data.to(device)
-    split_idx = {k: v.to(device) for k, v in split_idx.items()}
+    train_loader: ClusterLoader | None = None
+    eval_loader: ClusterLoader | None = None
+    if cfg["model"] == "gps":
+        if not (WITH_PYG_LIB or WITH_TORCH_SPARSE):
+            raise ImportError(
+                "GPS training requires 'pyg-lib' or 'torch-sparse' for ClusterData. "
+                "Install matching CUDA wheels in Colab before running --model gps."
+            )
+        build_split_masks(data=data, split_idx=split_idx)
+        lap_pe_k = int(cfg.get("lap_pe_k", 16))
+        data = add_or_load_laplacian_pe(
+            data=data,
+            root=PROJECT_ROOT / "data",
+            lap_pe_k=lap_pe_k,
+        )
+        train_loader, eval_loader = build_cluster_loaders(
+            data=data,
+            cfg=cfg,
+            cache_dir=PROJECT_ROOT / "data" / "processed" / "cluster_cache",
+        )
+        print("[phase-4] GPS mini-batch loaders ready (ClusterLoader).")
+    else:
+        data = data.to(device)
+        split_idx = {k: v.to(device) for k, v in split_idx.items()}
+
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=float(cfg["lr"]),
@@ -324,28 +576,24 @@ def main() -> None:
     checkpoint_path = results_dir / "best_model.pt"
 
     for epoch in range(1, int(cfg["epochs"]) + 1):
-        try:
-            train_loss, train_acc = train_epoch(model, data, split_idx, optimizer)
-            val_acc = evaluate(
+        if cfg["model"] == "gps":
+            if train_loader is None or eval_loader is None:
+                raise RuntimeError("GPS loaders were not initialised.")
+            train_loss, train_acc = train_epoch_gps(
                 model=model,
-                data=data,
-                split_idx=split_idx,
+                loader=train_loader,
+                optimizer=optimizer,
+                device=device,
+            )
+            val_acc = evaluate_gps(
+                model=model,
+                loader=eval_loader,
                 evaluator=evaluator,
                 split_name="valid",
                 device=device,
             )
-        except (RuntimeError, NotImplementedError) as error:
-            if device.type == "mps" and _is_mps_scatter_error(error):
-                # MPS can fail on some PyG sparse/scatter kernels.
-                # We fall back to CPU to keep training functional.
-                print(
-                    "[warn] MPS sparse/scatter op issue detected. "
-                    "Falling back to CPU for training."
-                )
-                device = torch.device("cpu")
-                model = model.to(device)
-                data = data.to(device)
-                split_idx = {k: v.to(device) for k, v in split_idx.items()}
+        else:
+            try:
                 train_loss, train_acc = train_epoch(model, data, split_idx, optimizer)
                 val_acc = evaluate(
                     model=model,
@@ -355,8 +603,31 @@ def main() -> None:
                     split_name="valid",
                     device=device,
                 )
-            else:
-                raise
+            except (RuntimeError, NotImplementedError) as error:
+                if device.type == "mps" and _is_mps_scatter_error(error):
+                    # MPS can fail on some PyG sparse/scatter kernels.
+                    # We fall back to CPU to keep training functional.
+                    print(
+                        "[warn] MPS sparse/scatter op issue detected. "
+                        "Falling back to CPU for training."
+                    )
+                    device = torch.device("cpu")
+                    model = model.to(device)
+                    data = data.to(device)
+                    split_idx = {k: v.to(device) for k, v in split_idx.items()}
+                    train_loss, train_acc = train_epoch(
+                        model, data, split_idx, optimizer
+                    )
+                    val_acc = evaluate(
+                        model=model,
+                        data=data,
+                        split_idx=split_idx,
+                        evaluator=evaluator,
+                        split_name="valid",
+                        device=device,
+                    )
+                else:
+                    raise
 
         train_losses.append(train_loss)
         train_accs.append(train_acc)
@@ -384,14 +655,27 @@ def main() -> None:
                 print(f"[early-stop] Stopping at epoch {epoch}.")
                 break
 
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
-    test_acc, y_pred_test, y_true_test = evaluate_with_predictions(
-        model=model,
-        data=data,
-        split_idx=split_idx,
-        evaluator=evaluator,
-        device=device,
+    model.load_state_dict(
+        torch.load(checkpoint_path, map_location=device, weights_only=False)
     )
+
+    if cfg["model"] == "gps":
+        if eval_loader is None:
+            raise RuntimeError("GPS eval loader was not initialised.")
+        test_acc, y_pred_test, y_true_test = evaluate_with_predictions_gps(
+            model=model,
+            loader=eval_loader,
+            evaluator=evaluator,
+            device=device,
+        )
+    else:
+        test_acc, y_pred_test, y_true_test = evaluate_with_predictions(
+            model=model,
+            data=data,
+            split_idx=split_idx,
+            evaluator=evaluator,
+            device=device,
+        )
     per_class = per_class_accuracy(
         y_pred=y_pred_test,
         y_true=y_true_test,
@@ -425,7 +709,8 @@ def main() -> None:
         filename="per_class_acc.json",
     )
 
-    phase_label = "phase-2" if cfg["model"] == "gcn" else "phase-3"
+    phase_map = {"gcn": "phase-2", "gat": "phase-3", "gps": "phase-4"}
+    phase_label = phase_map[cfg["model"]]
     print(f"\n[{phase_label}] Training complete.")
     print(
         f"[{phase_label}] Best validation accuracy: {best_val_acc:.4f} "

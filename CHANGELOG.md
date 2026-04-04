@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-04-04]
+
+### Added
+- Implemented Phase 4 GPS model in `models/gps.py` with 4-layer `GPSConv` stack, `GatedGraphConv` local message passing, and Laplacian PE-aware input projection for ogbn-arxiv node classification (Phase 4).
+
+### Changed
+- Integrated GPS training path in `scripts/train.py` with LapPE caching, split-mask construction, ClusterLoader mini-batching, GPS-specific train/eval loops, and phase-aware logging/output handling (Phase 4).
+- Updated `configs/gps.yaml` with explicit ogbn-arxiv dimensions and ClusterLoader controls (`num_parts`, `cluster_batch_size`, `cluster_recursive`) for reproducible Phase 4 runs (Phase 4).
+- Exported `GPS` in `models/__init__.py` so all three architectures are available from the package namespace (Phase 4).
+- Updated `README.md` to reflect GPS implementation status, add GPS training command guidance, and refresh phase tracker state (Phase 4).
+- Updated `notebooks/02_train_colab.ipynb` to install PyG sampling dependencies (`pyg_lib`/sparse extensions), enable GPS training cell, and include GPS artifacts in result push helper usage (Phase 4 enablement).
+
+### Fixed
+- Removed hardcoded GitHub PAT usage from `notebooks/02_train_colab.ipynb` by reading `GH_PAT` from Colab secrets (`userdata.get("GH_PAT")`) to avoid committing plaintext credentials (Phase 1 infrastructure hygiene).
+
 ## [2026-04-03]
 
 ### Added

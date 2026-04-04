@@ -3,6 +3,8 @@
 # Full-batch global attention is O(N²) on 169K nodes — mini-batching is required.
 
 model: gps
+in_channels: 128
+num_classes: 40
 hidden_dim: 256
 num_layers: 4
 num_heads: 8        # Transformer attention heads
@@ -11,8 +13,10 @@ dropout: 0.5
 # Laplacian Positional Encoding
 lap_pe_k: 16        # number of eigenvectors; precomputed once and cached
 
-# Mini-batch settings (ClusterLoader or NeighborLoader)
-batch_size: 1024
+# Mini-batch settings (ClusterLoader)
+num_parts: 160
+cluster_batch_size: 1
+cluster_recursive: false
 
 # Optimizer
 lr: 0.001
