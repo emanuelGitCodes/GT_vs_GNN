@@ -23,6 +23,8 @@
 - Updated configs with explicit input/output dimensions in `configs/gcn.yaml` and `configs/gat.yaml` (Phases 2–3).
 
 ### Fixed
+- Fixed Colab git commit failure (`exit status 128`) in `notebooks/02_train_colab.ipynb` by configuring `git config user.name/user.email` inside `push_results_to_github` before committing (Phase 1).
+- Removed interactive username/PAT prompts from `push_results_to_github` and reused `GH_USER` + `GH_PAT` loaded in Cell 2, making Cell 11 one-step and non-interactive for secret-based auth (Phase 1).
 - Fixed incorrect `REPO_DIR = "/content/codebase"` in `notebooks/02_train_colab.ipynb` Cell 2; corrected to `"/content/GT_vs_GNN"` to match the actual cloned repo folder name (Phase 1).
 - Added PyTorch version guard in Cell 5 of `notebooks/02_train_colab.ipynb` that raises a clear `RuntimeError` if the runtime was not restarted after the Cell 1 pip install, preventing silent use of the wrong PyTorch version (Phase 1).
 - Added Cell 5b in `notebooks/02_train_colab.ipynb` to wipe `data/ogbn_arxiv/processed/` before dataset load, eliminating stale `.pt` cache files written under PyTorch>=2.6 that cause `UnpicklingError` when read back under 2.5.1 (Phase 1).
