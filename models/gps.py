@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torch_geometric.nn import GPSConv, GatedGraphConv
+from torch_geometric.nn import GCNConv, GPSConv
 
 
 class GPS(nn.Module):
@@ -35,7 +35,9 @@ class GPS(nn.Module):
         self.layers = nn.ModuleList()
 
         for _ in range(num_layers):
-            local_mpnn = GatedGraphConv(out_channels=hidden_dim, num_layers=1)
+            # For ogbn-arxiv node classification, a simple GCN local MPNN tends
+            # to be more stable than gated recurrent local propagation.
+            local_mpnn = GCNConv(hidden_dim, hidden_dim)
             self.layers.append(
                 GPSConv(
                     channels=hidden_dim,
