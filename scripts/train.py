@@ -375,6 +375,7 @@ def train_epoch_gps(
     loader: ClusterLoader,
     optimizer: torch.optim.Optimizer,
     device: torch.device,
+    max_grad_norm: float | None = None,
 ) -> tuple[float, float]:
     """Run one GPS mini-batch epoch and return (loss, train_acc)."""
     model.train()
@@ -401,6 +402,8 @@ def train_epoch_gps(
         logits = out[train_mask]
         loss = F.cross_entropy(logits, y_train)
         loss.backward()
+        if max_grad_norm is not None and max_grad_norm > 0.0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=max_grad_norm)
         optimizer.step()
 
         n = int(train_mask.sum().item())
@@ -592,6 +595,15 @@ def main() -> None:
         lr=float(cfg["lr"]),
         weight_decay=float(cfg["weight_decay"]),
     )
+    gps_scheduler: torch.optim.lr_scheduler.ReduceLROnPlateau | None = None
+    if cfg["model"] == "gps" and cfg.get("lr_scheduler") == "reduce_on_plateau":
+        gps_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer=optimizer,
+            mode="max",
+            factor=float(cfg.get("lr_reduce_factor", 0.5)),
+            patience=int(cfg.get("lr_reduce_patience", 20)),
+            min_lr=float(cfg.get("lr_min", 1e-5)),
+        )
     evaluator = get_evaluator("ogbn-arxiv")
 
     best_val_acc = 0.0
@@ -612,6 +624,7 @@ def main() -> None:
                 loader=train_loader,
                 optimizer=optimizer,
                 device=device,
+                max_grad_norm=float(cfg.get("max_grad_norm", 1.0)),
             )
             val_acc = evaluate_gps(
                 model=model,
@@ -620,6 +633,8 @@ def main() -> None:
                 split_name="valid",
                 device=device,
             )
+            if gps_scheduler is not None:
+                gps_scheduler.step(val_acc)
         else:
             try:
                 train_loss, train_acc = train_epoch(model, data, split_idx, optimizer)
@@ -663,11 +678,13 @@ def main() -> None:
 
         if epoch % 10 == 0:
             mem_info = _mps_memory_info(device)
+            current_lr = float(optimizer.param_groups[0]["lr"])
             print(
                 f"Epoch {epoch:04d} | "
                 f"loss {train_loss:.4f} | "
                 f"train {train_acc:.4f} | "
                 f"val {val_acc:.4f}"
+                f" | lr {current_lr:.6f}"
                 f"{mem_info}"
             )
 

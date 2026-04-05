@@ -45,7 +45,7 @@ class GPS(nn.Module):
                     heads=num_heads,
                     dropout=dropout,
                     act="relu",
-                    norm="batch_norm",
+                    norm="layer_norm",
                 )
             )
 

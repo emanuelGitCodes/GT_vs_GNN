@@ -5,6 +5,9 @@
 ### Changed
 - Re-tuned Phase 4 GPS defaults in `configs/gps.yaml` (`num_parts=64`, `cluster_batch_size=1`, `lr=5e-4`, `weight_decay=1e-4`, `patience=100`) to increase per-cluster attention context and reduce premature early stopping (Phase 4).
 - Added `log_gps_attention_context` in `scripts/train.py` to print estimated per-cluster attention scope and clarify that `cluster_batch_size` improves throughput but not attention context size (Phase 4).
+- Switched GPS normalization in `models/gps.py` from `batch_norm` to `layer_norm` to improve mini-batch Transformer stability under ClusterLoader training (Phase 4).
+- Updated Phase 4 GPS config in `configs/gps.yaml` to `num_parts=32`, `lr=1e-3`, and added `max_grad_norm` plus ReduceLROnPlateau scheduler settings for more stable optimization and larger attention context (Phase 4).
+- Extended the GPS training path in `scripts/train.py` with configurable gradient clipping, ReduceLROnPlateau stepping on validation accuracy, and learning-rate logging every 10 epochs (Phase 4).
 
 ## [2026-04-04]
 
