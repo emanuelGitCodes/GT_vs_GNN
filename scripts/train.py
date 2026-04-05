@@ -343,6 +343,33 @@ def build_cluster_loaders(
     return train_loader, eval_loader
 
 
+def log_gps_attention_context(data: Data, cfg: dict) -> None:
+    """Print approximate per-cluster attention context for GPS mini-batching.
+
+    GPS attention is applied per graph in a mini-batch. With ``ClusterLoader``,
+    each partition is treated as a separate graph, so ``cluster_batch_size``
+    increases throughput but does *not* increase the per-node attention context.
+    """
+    num_nodes = int(data.num_nodes)
+    num_parts = max(1, int(cfg.get("num_parts", 160)))
+    cluster_batch_size = max(1, int(cfg.get("cluster_batch_size", 1)))
+
+    approx_nodes_per_cluster = num_nodes / num_parts
+    approx_attn_entries = approx_nodes_per_cluster**2
+
+    print(
+        "[phase-4] GPS attention context estimate: "
+        f"~{approx_nodes_per_cluster:.0f} nodes/cluster "
+        f"(~{approx_attn_entries / 1e6:.2f}M pairwise scores per head)."
+    )
+
+    if cluster_batch_size > 1:
+        print(
+            "[phase-4] Note: cluster_batch_size controls throughput only. "
+            "Attention remains per cluster (graphs are processed independently)."
+        )
+
+
 def train_epoch_gps(
     model: torch.nn.Module,
     loader: ClusterLoader,
@@ -549,6 +576,7 @@ def main() -> None:
             root=PROJECT_ROOT / "data",
             lap_pe_k=lap_pe_k,
         )
+        log_gps_attention_context(data=data, cfg=cfg)
         train_loader, eval_loader = build_cluster_loaders(
             data=data,
             cfg=cfg,
