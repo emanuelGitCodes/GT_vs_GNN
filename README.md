@@ -95,6 +95,16 @@ python scripts/train.py --model gps --device auto
 
 > GPS uses Laplacian positional encoding + ClusterLoader mini-batching. Ensure `pyg-lib` or `torch-sparse` is installed in your runtime.
 
+### 6) Generate comparison tables and plots locally
+
+```bash
+python scripts/compare_results.py
+```
+
+This reads saved `results/<model>/metrics.json` and `per_class_acc.json`
+artifacts, then writes report-ready outputs to `results/comparisons/`.
+It is intended to run on the local M1 Max without Colab.
+
 ---
 
 ## Training Outputs
@@ -115,9 +125,9 @@ Each run writes artifacts under `results/<model>/`, including:
 | 0 | ✅ Done | Scaffold, environment, device detection |
 | 1 | ✅ Done | Dataset loading & EDA |
 | 2 | ✅ Done | GCN baseline (~71%) |
-| 3 | ✅ Done | GAT baseline (~73%) |
-| 4 | ⏳ In Progress | GPS / Graph Transformer (~79%) |
-| 5 | ⬜ Planned | Per-class comparative analysis |
+| 3 | ✅ Done | GAT baseline (~72%) |
+| 4 | ✅ Done | GPS / Graph Transformer prototype (~70%) |
+| 5 | ✅ Done | Per-class comparative analysis |
 | 6 | ⬜ Planned | Attention & embedding visualization |
 | 7 | ⬜ Planned | Report & submission |
 

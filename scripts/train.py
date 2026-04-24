@@ -726,6 +726,13 @@ def main() -> None:
         y_true=y_true_test,
         num_classes=int(cfg["num_classes"]),
     )
+    predictions_path = results_dir / "test_predictions.npz"
+    np.savez(
+        predictions_path,
+        y_pred=y_pred_test.cpu().numpy(),
+        y_true=y_true_test.cpu().numpy(),
+    )
+    print(f"[metrics] Saved test predictions → {predictions_path}")
 
     plot_training_curves(
         train_accs=train_accs,

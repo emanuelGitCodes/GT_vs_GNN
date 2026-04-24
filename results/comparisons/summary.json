@@ -1,0 +1,79 @@
+{
+  "overall_test_acc": {
+    "gcn": 0.720140732053577,
+    "gat": 0.7159434602802296,
+    "gps": 0.6967471143756558
+  },
+  "macro_per_class_acc": {
+    "gcn": 0.48285419060848656,
+    "gat": 0.4803353134542704,
+    "gps": 0.48093483415432275
+  },
+  "gps_minus_gcn": {
+    "cross_domain_correlation": 0.11979491407836117,
+    "largest_gains": [
+      {
+        "class_id": 25,
+        "label": "cs.SD",
+        "delta": 0.12210524082183838
+      },
+      {
+        "class_id": 11,
+        "label": "cs.MA",
+        "delta": 0.1171548143029213
+      },
+      {
+        "class_id": 13,
+        "label": "cs.NE",
+        "delta": 0.09394904971122742
+      },
+      {
+        "class_id": 15,
+        "label": "cs.AR",
+        "delta": 0.09195402264595032
+      },
+      {
+        "class_id": 32,
+        "label": "cs.MS",
+        "delta": 0.07228916883468628
+      }
+    ],
+    "largest_losses": [
+      {
+        "class_id": 0,
+        "label": "cs.NA",
+        "delta": -0.14814814925193787
+      },
+      {
+        "class_id": 24,
+        "label": "cs.LG",
+        "delta": -0.09115457534790039
+      },
+      {
+        "class_id": 14,
+        "label": "cs.SC",
+        "delta": -0.0845070481300354
+      },
+      {
+        "class_id": 37,
+        "label": "cs.DB",
+        "delta": -0.0665280818939209
+      },
+      {
+        "class_id": 2,
+        "label": "cs.LO",
+        "delta": -0.06412005424499512
+      }
+    ]
+  },
+  "cs_hc": {
+    "class_id": 6,
+    "label": "cs.HC",
+    "accuracy": {
+      "gcn": 0.234726682305336,
+      "gat": 0.22347266972064972,
+      "gps": 0.2218649536371231
+    },
+    "cross_domain_ratio": 0.6950576305389404
+  }
+}
