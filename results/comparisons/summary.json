@@ -10,7 +10,7 @@
     "gps": 0.4798258308786899
   },
   "gps_minus_gcn": {
-    "cross_domain_correlation": 0.05673562235942977,
+    "cross_domain_correlation": 0.05673562235942981,
     "largest_gains": [
       {
         "class_id": 13,

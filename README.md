@@ -128,7 +128,13 @@ Each run writes artifacts under `results/<model>/`, including:
 | 3 | ✅ Done | GAT baseline (~72%) |
 | 4 | ✅ Done | GPS / Graph Transformer prototype (~70%) |
 | 5 | ✅ Done | Per-class comparative analysis |
-| 6 | ⬜ Planned | Attention & embedding visualization |
-| 7 | ⬜ Planned | Report & submission |
+| 6 | ↩️ Deferred | Attention & embedding visualization |
+| 7 | ⏳ In Progress | Report & submission |
 
 For detailed deliverables and risk mitigation, see `IMPLEMENTATION_GUIDE.md`.
+
+Phase 6 was deferred because the current GPS implementation uses
+ClusterLoader mini-batching, which limits attention to cluster-local context
+and does not expose a clean full-graph attention analysis path. The final
+report should instead focus on the completed aggregate, per-class, F1, and
+cross-domain analyses in `results/comparisons/`.
