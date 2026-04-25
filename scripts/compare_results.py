@@ -23,11 +23,12 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
-from utils.eda import load_dataset  # noqa: E402
-from utils.viz import (  # noqa: E402
+from gt_vs_gnn.utils.eda import load_dataset  # noqa: E402
+from gt_vs_gnn.utils.viz import (  # noqa: E402
     plot_accuracy_delta,
     plot_cross_domain_delta,
     plot_grouped_accuracy,
@@ -453,10 +454,17 @@ def main() -> None:
             ["model", "class_id", "precision", "recall", "f1", "test_support"],
         )
     else:
-        print(
-            "[compare] No test_predictions.npz files found; "
-            "precision/F1 will be available after future train.py runs."
-        )
+        existing_prediction_csv = output_dir / "prediction_metrics.csv"
+        if existing_prediction_csv.exists():
+            print(
+                "[compare] No test_predictions.npz files found; "
+                f"preserving existing {existing_prediction_csv}."
+            )
+        else:
+            print(
+                "[compare] No test_predictions.npz files found; "
+                "precision/F1 will be available after future train.py runs."
+            )
 
     write_summary_json(
         output_dir / "summary.json",

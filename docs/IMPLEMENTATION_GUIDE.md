@@ -2,6 +2,11 @@
 
 > OpenCode working doc for EEL 6878 Final Project.
 > All code targets Apple M1 Max (MPS backend). Single-developer execution.
+>
+> Current active workflow: use `notebooks/colab_train_and_compare.ipynb` for Colab
+> training, `scripts/train.py` for model runs, and `scripts/compare_results.py`
+> for local comparison tables, plots, and F1 metrics. Obsolete exploratory and
+> comparison notebooks have been removed.
 
 ---
 
@@ -15,14 +20,14 @@
   ```
   project/
   ├── configs/          # hyperparameter YAML/dict files per model
-  ├── models/           # gcn.py, gat.py, gps.py
-  ├── utils/            # device.py, metrics.py, viz.py
-  ├── notebooks/        # EDA, attention viz, t-SNE
-  ├── scripts/          # train.py, evaluate.py
+  ├── src/gt_vs_gnn/    # reusable models and utilities
+  ├── notebooks/        # colab_train_and_compare.ipynb
+  ├── scripts/          # train.py, compare_results.py
   ├── results/          # saved metrics, plots, checkpoints
+  ├── docs/             # implementation guide and changelog
   └── README.md
   ```
-- [ ] `utils/device.py` — device selector (MPS → CUDA → CPU), with a sanity-check tensor op
+- [ ] `src/gt_vs_gnn/utils/device.py` — device selector (MPS → CUDA → CPU), with a sanity-check tensor op
 - [ ] `scripts/train.py` — skeleton with argparse: `--model {gcn,gat,gps}`, `--epochs`, `--lr`, etc.
 - [ ] Confirm `torch.backends.mps.is_available()` returns `True` and a small matmul runs clean
 
@@ -45,7 +50,8 @@
 
 **Suggestion:** Compute a simple "cross-domain citation ratio" per class — this becomes a key explanatory variable when you later correlate it with per-class accuracy deltas between GPS and GCN/GAT. It strengthens the narrative beyond just reporting numbers.
 
-**Deliverable:** EDA notebook with plots + a `dataset_stats.json` summary.
+**Deliverable:** `results/dataset_stats.json` summary and EDA plots under
+`results/eda/`.
 
 ---
 
@@ -53,7 +59,7 @@
 
 **Goal:** Working GCN, validated against OGB leaderboard (~71%).
 
-- [ ] `models/gcn.py` — 3-layer GCN, hidden=256, ReLU, dropout=0.5
+- [ ] `src/gt_vs_gnn/models/gcn.py` — 3-layer GCN, hidden=256, ReLU, dropout=0.5
 - [ ] Integrate into `train.py` with:
   - Adam, lr=1e-3, weight_decay=5e-4
   - Early stopping (patience=50) on validation accuracy
@@ -72,7 +78,7 @@
 
 **Goal:** Working GAT, validated against OGB leaderboard (~73%).
 
-- [ ] `models/gat.py` — 3-layer GAT, hidden=256, 8 heads (hidden), 1 head (output), dropout=0.5
+- [ ] `src/gt_vs_gnn/models/gat.py` — 3-layer GAT, hidden=256, 8 heads (hidden), 1 head (output), dropout=0.5
 - [ ] Same training protocol as Phase 2
 - [ ] Compare per-class accuracy against GCN — note any cs.HC movement
 - [ ] Save checkpoint + metrics to `results/gat/`
@@ -85,9 +91,10 @@
 
 ## Phase 4: GPS (Graph Transformer)
 
-**Goal:** Working GPS, target ~79% accuracy.
+**Goal:** Working GPS prototype. Original target was ~79% accuracy, but the
+final ClusterLoader-based run is closer to ~69-70% test accuracy.
 
-- [ ] `models/gps.py` — 4 GPS layers, hidden=256, 8 Transformer heads, GatedGCN local MPNN
+- [ ] `src/gt_vs_gnn/models/gps.py` — 4 GPS layers, hidden=256, 8 Transformer heads, GatedGCN local MPNN
 - [ ] Laplacian Positional Encoding (LapPE) with 16 eigenvectors
   - Use `torch_geometric.transforms.AddLaplacianEigenvectorPE`
   - This is a **preprocessing step** — compute once and cache
@@ -109,45 +116,45 @@
 
 ## Phase 5: Per-Class Analysis & Comparative Evaluation
 
+**Status:** Done via `scripts/compare_results.py`.
+
 **Goal:** Generate the core results table and per-class comparison.
 
-- [ ] Load all three `per_class_acc.json` files
-- [ ] Aggregate accuracy table: GCN vs GAT vs GPS (overall + cs.HC)
-- [ ] Per-class accuracy bar chart (grouped by model, all 40 classes)
-- [ ] Delta plot: `(GPS_acc - GCN_acc)` per class, sorted — highlight where GPS gains/loses most
-- [ ] Correlation analysis: cross-domain citation ratio (from Phase 1) vs GPS accuracy gain
+- [x] Load all three `per_class_acc.json` files
+- [x] Aggregate accuracy table: GCN vs GAT vs GPS (overall + cs.HC)
+- [x] Per-class accuracy bar chart (grouped by model, all 40 classes)
+- [x] Delta plot: `(GPS_acc - GCN_acc)` per class, sorted — highlight where GPS gains/loses most
+- [x] Correlation analysis: cross-domain citation ratio (from Phase 1) vs GPS accuracy gain
   - If this correlation is strong, it's the strongest evidence for your hypothesis
   - If it's weak, that's also a valid finding — report it honestly
 
 **Suggestion:** Also compute per-class F1 in addition to accuracy. With 40 imbalanced classes, accuracy alone can be misleading for minority classes like cs.HC. The OGB evaluator uses accuracy, so report both.
 
-**Deliverable:** Comparative results notebook + publication-ready plots in `results/`.
+**Deliverable:** `results/comparisons/` with `overall_metrics.csv`,
+`per_class_accuracy.csv`, `prediction_metrics.csv`, `summary.json`, and
+publication-ready plots.
 
 ---
 
 ## Phase 6: Attention & Embedding Visualization
 
+**Status:** Deferred.
+
 **Goal:** Interpretability analysis for GPS.
 
-### Attention Visualization
-- [ ] Extract attention weights from GPS Transformer heads for a sample of cs.HC nodes (~20-50 papers)
-- [ ] For each sampled cs.HC node, rank top-K attended nodes by attention weight
-- [ ] Compute: what fraction of top-K attended nodes are from *different* categories?
-- [ ] Heatmap or chord diagram: cs.HC attention distribution across categories
+This phase is intentionally deferred for the final submission. The current GPS
+implementation uses ClusterLoader mini-batching, so Transformer attention is
+cluster-local rather than full-graph global attention. The current code also
+does not expose final-layer embeddings or attention weights. Adding those paths
+would be a larger follow-up and could distract from the completed evidence.
 
-### t-SNE Embedding Comparison
-- [ ] Extract final-layer embeddings from all three models (on test set)
-- [ ] t-SNE projection, colored by category
-- [ ] Qualitative comparison: cluster separation, cs.HC positioning
-- [ ] Optional: silhouette score per model as a quantitative cluster quality metric
-
-**Suggestion:** For t-SNE, fix `random_state` and use the same perplexity across models so differences reflect embeddings, not hyperparameters. Also consider UMAP as an alternative — it tends to preserve global structure better, which is exactly what you're arguing GPS captures.
-
-**Deliverable:** Attention viz notebook + t-SNE/UMAP plots in `results/`.
+**Deliverable:** Deferred follow-up; not part of the cleaned final workflow.
 
 ---
 
 ## Phase 7: Report & Submission
+
+**Status:** In progress.
 
 **Goal:** Final paper with all figures and analysis.
 
@@ -155,7 +162,7 @@
 - [ ] Insert all plots and tables
 - [ ] Write analysis: does the data support the hypothesis?
 - [ ] Proofread, check references, verify all numbers match saved metrics
-- [ ] Package code repo for submission (clean up notebooks, add docstrings)
+- [x] Package code repo for submission (clean up notebooks, remove stale stubs)
 
 ---
 

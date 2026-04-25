@@ -5,3 +5,6 @@ __pycache__/
 *.pt
 *.pth
 *.env
+build/
+dist/
+*.egg-info/

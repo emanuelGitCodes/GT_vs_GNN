@@ -2,7 +2,7 @@
 
 Usage
 -----
-    from utils.device import get_device, sanity_check
+    from gt_vs_gnn.utils.device import get_device, sanity_check
 
     device = get_device("auto")
     sanity_check(device)

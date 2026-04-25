@@ -21,12 +21,13 @@ Two supported execution environments:
    - Reserve MPS for GPS dense attention workloads in Phase 4.
 2. **Colab (CUDA: H100/A100/T4 fallback)**
    - Use `--device auto` or `--device cuda`.
-   - Main workflow notebook: `notebooks/02_train_colab.ipynb`.
+   - Main workflow notebook: `notebooks/colab_train_and_compare.ipynb`.
 
 Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ---
@@ -39,24 +40,21 @@ project/
 │   ├── gcn.yaml
 │   ├── gat.yaml
 │   └── gps.yaml
-├── models/
-│   ├── gcn.py               # Phase 2 baseline
-│   ├── gat.py               # Phase 3 baseline
-│   └── gps.py               # Phase 4 baseline
+├── src/
+│   └── gt_vs_gnn/
+│       ├── models/          # GCN, GAT, GPS model definitions
+│       └── utils/           # Device, EDA, metrics, plotting helpers
 ├── scripts/
-│   └── train.py             # Training entry point (GCN/GAT/GPS implemented)
-├── utils/
-│   ├── device.py            # Device selection + sanity check + cache management
-│   ├── eda.py               # Dataset loading and EDA helpers
-│   ├── metrics.py           # OGB eval + per-class metrics + JSON saving
-│   └── viz.py               # Training curves and analysis plots
+│   ├── train.py             # Training entry point (GCN/GAT/GPS implemented)
+│   └── compare_results.py   # Local comparison tables/plots/F1 metrics
 ├── notebooks/
-│   ├── 01_eda.ipynb
-│   ├── 02_train_colab.ipynb
-│   └── 03_colab_evaluate_results.ipynb
+│   └── colab_train_and_compare.ipynb
 ├── results/                 # Metrics, checkpoints, plots
-├── IMPLEMENTATION_GUIDE.md  # Phase-by-phase execution plan
-└── CHANGELOG.md
+├── docs/
+│   ├── IMPLEMENTATION_GUIDE.md
+│   └── CHANGELOG.md
+├── pyproject.toml
+└── README.md
 ```
 
 ---
@@ -66,7 +64,7 @@ project/
 ### 1) Verify device detection
 
 ```bash
-python utils/device.py
+python -m gt_vs_gnn.utils.device
 ```
 
 ### 2) Train GCN (local CPU recommended)
@@ -114,7 +112,16 @@ Each run writes artifacts under `results/<model>/`, including:
 - `best_model.pt`
 - `metrics.json`
 - `per_class_acc.json`
+- `test_predictions.npz`
 - `training_curves.png`
+
+Comparison artifacts are written under `results/comparisons/`, including:
+
+- `overall_metrics.csv`
+- `per_class_accuracy.csv`
+- `prediction_metrics.csv`
+- `summary.json`
+- comparison plots (`*.png`)
 
 ---
 
@@ -131,7 +138,7 @@ Each run writes artifacts under `results/<model>/`, including:
 | 6 | ↩️ Deferred | Attention & embedding visualization |
 | 7 | ⏳ In Progress | Report & submission |
 
-For detailed deliverables and risk mitigation, see `IMPLEMENTATION_GUIDE.md`.
+For detailed deliverables and risk mitigation, see `docs/IMPLEMENTATION_GUIDE.md`.
 
 Phase 6 was deferred because the current GPS implementation uses
 ClusterLoader mini-batching, which limits attention to cluster-local context

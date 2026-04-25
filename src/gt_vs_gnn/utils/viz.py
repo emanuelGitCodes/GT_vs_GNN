@@ -1,8 +1,8 @@
 """Visualization utilities for training curves, per-class accuracy, and embeddings.
 
-Usage (once implemented)
-------------------------
-    from utils.viz import plot_training_curves, plot_per_class_accuracy
+Usage
+-----
+    from gt_vs_gnn.utils.viz import plot_training_curves, plot_per_class_accuracy
 """
 
 from __future__ import annotations
@@ -219,36 +219,3 @@ def _save_or_show(save_path: Optional[Path]) -> None:
         plt.savefig(save_path, dpi=300)
         print(f"[viz] Saved -> {save_path}")
     plt.close()
-
-
-# ---------------------------------------------------------------------------
-# Phase 6: Embedding visualization
-# ---------------------------------------------------------------------------
-
-
-def plot_tsne(
-    embeddings,  # np.ndarray (N, D)
-    labels,  # np.ndarray (N,)
-    model_name: str,
-    random_state: int = 42,
-    perplexity: float = 30.0,
-    save_path: Optional[Path] = None,
-) -> None:
-    """t-SNE projection of node embeddings, coloured by class.
-
-    Fix ``random_state`` and ``perplexity`` across models so differences
-    reflect the embeddings, not the projection hyperparameters.
-    Implemented in Phase 6.
-    """
-    raise NotImplementedError("plot_tsne — implemented in Phase 6")
-
-
-def plot_attention_heatmap(
-    attention_matrix,  # np.ndarray (num_cs_hc_nodes, num_classes)
-    save_path: Optional[Path] = None,
-) -> None:
-    """Heatmap of GPS attention distribution for cs.HC nodes across categories.
-
-    Implemented in Phase 6.
-    """
-    raise NotImplementedError("plot_attention_heatmap — implemented in Phase 6")

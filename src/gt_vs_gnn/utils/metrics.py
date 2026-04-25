@@ -4,7 +4,7 @@ All functions accept CPU tensors. Move tensors off the device before calling.
 
 Usage
 -----
-    from utils.metrics import get_evaluator, eval_acc, per_class_accuracy
+    from gt_vs_gnn.utils.metrics import get_evaluator, eval_acc, per_class_accuracy
 
     evaluator = get_evaluator()
     acc = eval_acc(evaluator, y_pred, y_true)

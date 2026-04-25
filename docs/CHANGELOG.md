@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-04-24]
+
+### Changed
+- Reorganized reusable code into a `src/gt_vs_gnn/` package with `models/` and `utils/` subpackages.
+- Renamed the active Colab workflow notebook to `notebooks/colab_train_and_compare.ipynb`.
+- Moved planning/history docs into `docs/`.
+- Streamlined the final workflow around `notebooks/colab_train_and_compare.ipynb`, `scripts/train.py`, and `scripts/compare_results.py`.
+- Updated `README.md` and `docs/IMPLEMENTATION_GUIDE.md` to reflect the cleaned workflow, generated comparison artifacts, and deferred Phase 6 interpretability scope.
+
+### Removed
+- Removed obsolete notebooks `notebooks/01_eda.ipynb` and `notebooks/03_colab_evaluate_results.ipynb`; their active functionality is covered by `src/gt_vs_gnn/utils/eda.py`, saved EDA artifacts, and `scripts/compare_results.py`.
+- Removed deferred Phase 6 placeholder visualization stubs from `src/gt_vs_gnn/utils/viz.py`.
+
 ## [2026-04-05]
 
 ### Changed

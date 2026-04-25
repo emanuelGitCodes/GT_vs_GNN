@@ -1,7 +1,4 @@
-"""train.py — Training entry point for GCN / GAT / GPS on ogbn-arxiv.
-
-Phases 2–3 implement full-batch training pipelines for GCN and GAT baselines.
-"""
+"""Training entry point for GCN, GAT, and GPS on ogbn-arxiv."""
 
 from __future__ import annotations
 
@@ -22,20 +19,21 @@ from torch_geometric.transforms import AddLaplacianEigenvectorPE
 from torch_geometric.typing import WITH_PYG_LIB, WITH_TORCH_SPARSE
 from torch_geometric.utils import to_undirected
 
-# Make sure the project root is on sys.path when running as a script
+# Make sure the src package is importable when running as a script.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
-from utils.device import empty_cache, get_device, sanity_check  # noqa: E402
-from utils.eda import load_dataset  # noqa: E402
-from utils.metrics import (  # noqa: E402
+from gt_vs_gnn.utils.device import empty_cache, get_device, sanity_check  # noqa: E402
+from gt_vs_gnn.utils.eda import load_dataset  # noqa: E402
+from gt_vs_gnn.utils.metrics import (  # noqa: E402
     eval_acc,
     get_evaluator,
     per_class_accuracy,
     save_metrics,
 )
-from utils.viz import plot_training_curves  # noqa: E402
+from gt_vs_gnn.utils.viz import plot_training_curves  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -547,15 +545,15 @@ def main() -> None:
 
     # Model instantiation (Phases 2–4)
     if cfg["model"] == "gcn":
-        from models.gcn import GCN
+        from gt_vs_gnn.models.gcn import GCN
 
         model = GCN(cfg).to(device)
     elif cfg["model"] == "gat":
-        from models.gat import GAT
+        from gt_vs_gnn.models.gat import GAT
 
         model = GAT(cfg).to(device)
     elif cfg["model"] == "gps":
-        from models.gps import GPS
+        from gt_vs_gnn.models.gps import GPS
 
         model = GPS(cfg).to(device)
     else:
