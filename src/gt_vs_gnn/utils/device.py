@@ -18,6 +18,32 @@ import torch
 DevicePreference = Literal["auto", "mps", "cuda", "cpu"]
 
 
+def cuda_build_supports_current_gpu() -> tuple[bool, str]:
+    """Return whether the installed PyTorch CUDA build supports this GPU.
+
+    Blackwell GPUs can report as available even when the installed PyTorch
+    wheel lacks the matching CUDA architecture. Trying to allocate tensors on
+    such a device raises a runtime kernel-image error later in training, so we
+    check support before selecting CUDA in auto mode.
+    """
+    if not torch.cuda.is_available():
+        return False, "CUDA is not available."
+
+    major, minor = torch.cuda.get_device_capability(0)
+    required_arch = f"sm_{major}{minor}"
+    arch_list = set(torch.cuda.get_arch_list())
+    if required_arch in arch_list or f"compute_{major}{minor}" in arch_list:
+        return True, f"CUDA architecture {required_arch} is supported."
+
+    gpu_name = torch.cuda.get_device_name(0)
+    supported = ", ".join(sorted(arch_list)) or "none reported"
+    return (
+        False,
+        f"GPU '{gpu_name}' requires {required_arch}, but this PyTorch build "
+        f"supports: {supported}.",
+    )
+
+
 def get_device(preference: DevicePreference = "auto") -> torch.device:
     """Return the selected device with optional manual override.
 
@@ -38,7 +64,11 @@ def get_device(preference: DevicePreference = "auto") -> torch.device:
         if torch.backends.mps.is_available():
             return torch.device("mps")
         if torch.cuda.is_available():
-            return torch.device("cuda")
+            cuda_supported, reason = cuda_build_supports_current_gpu()
+            if cuda_supported:
+                return torch.device("cuda")
+            print(f"[device] CUDA unavailable for this build: {reason}")
+            print("[device] Falling back to CPU.")
         return torch.device("cpu")
 
     if preference == "mps":
@@ -49,6 +79,12 @@ def get_device(preference: DevicePreference = "auto") -> torch.device:
     if preference == "cuda":
         if not torch.cuda.is_available():
             raise RuntimeError("Requested device 'cuda' is not available.")
+        cuda_supported, reason = cuda_build_supports_current_gpu()
+        if not cuda_supported:
+            raise RuntimeError(
+                "Requested device 'cuda' is not usable with this PyTorch build. "
+                f"{reason}"
+            )
         return torch.device("cuda")
 
     if preference == "cpu":
