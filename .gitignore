@@ -8,3 +8,9 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+
+CLAUDE.md
+.claude/
+.opencode/
+
+.ruff_cache/
