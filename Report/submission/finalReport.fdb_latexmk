@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1777750043.02589 "/Users/emanuelcortes/Documents/Masters/EEL6878 Modeling and AI/Assigments/Final Project/GT_vs_GNN/Report/submission/finalReport.tex" "finalReport.pdf" "finalReport" 1777750044.21352 0
-  "/Users/emanuelcortes/Documents/Masters/EEL6878 Modeling and AI/Assigments/Final Project/GT_vs_GNN/Report/submission/finalReport.tex" 1777750018.01182 25889 d46b2db8cfe059d842831fecb7d0d899 ""
+["pdflatex"] 1777940708.56959 "/Users/emanuelcortes/Documents/Masters/EEL6878 Modeling and AI/Assigments/Final Project/GT_vs_GNN/Report/submission/finalReport.tex" "finalReport.pdf" "finalReport" 1777940709.74196 0
+  "/Users/emanuelcortes/Documents/Masters/EEL6878 Modeling and AI/Assigments/Final Project/GT_vs_GNN/Report/submission/finalReport.tex" 1777940121.83218 26084 43f93fb5f4ff9835483c5140dbeea268 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2024/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/tfm/adobe/courier/pcrr7t.tfm" 1136768653 960 379cc0019370a9e0208a0a3f949f847a ""
@@ -90,8 +90,8 @@
   "/usr/local/texlive/2024/texmf.cnf" 1710266656 577 e590dabc9e28c5b61546e15f63eebcdf ""
   "figures/per_class_accuracy.png" 1777078851.1184 215821 1242c578d82f3f242af537443d2ade53 ""
   "figures/training_curves.png" 1777078851.12182 139857 76edd99b2d68283f1576cafb555d1894 ""
-  "finalReport.aux" 1777750044.14878 4417 5a72f46ae30f938c2b466311f76bf952 "pdflatex"
-  "finalReport.tex" 1777750018.01182 25889 d46b2db8cfe059d842831fecb7d0d899 ""
+  "finalReport.aux" 1777940709.67062 4417 5a72f46ae30f938c2b466311f76bf952 "pdflatex"
+  "finalReport.tex" 1777940121.83218 26084 43f93fb5f4ff9835483c5140dbeea268 ""
   (generated)
   "finalReport.aux"
   "finalReport.log"

@@ -131,12 +131,12 @@ Comparison artifacts are written under `results/comparisons/`, including:
 |---|---|---|
 | 0 | ✅ Done | Scaffold, environment, device detection |
 | 1 | ✅ Done | Dataset loading & EDA |
-| 2 | ✅ Done | GCN baseline (~71%) |
-| 3 | ✅ Done | GAT baseline (~72%) |
-| 4 | ✅ Done | GPS / Graph Transformer prototype (~70%) |
+| 2 | ✅ Done | GCN baseline (72.00%) |
+| 3 | ✅ Done | GAT baseline (71.75%) |
+| 4 | ✅ Done | GPS / Graph Transformer prototype (68.97%) |
 | 5 | ✅ Done | Per-class comparative analysis |
 | 6 | ↩️ Deferred | Attention & embedding visualization |
-| 7 | ⏳ In Progress | Report & submission |
+| 7 | ✅ Done | Report & submission |
 
 For detailed deliverables and risk mitigation, see `docs/IMPLEMENTATION_GUIDE.md`.
 

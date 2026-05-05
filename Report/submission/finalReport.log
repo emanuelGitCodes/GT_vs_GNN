@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.9.6)  2 MAY 2026 15:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.9.6)  4 MAY 2026 20:25
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -273,15 +273,15 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
 
 
 ]
-LaTeX Font Info:    Trying to load font information for U+msa on input line 130.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 138.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 130.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 138.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [2]
-Overfull \hbox (5.59857pt too wide) in paragraph at lines 320--329
+Overfull \hbox (5.59857pt too wide) in paragraph at lines 328--337
  [][] 
  []
 
@@ -291,7 +291,7 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 <figures/training_curves.png, id=25, 578.16pt x 361.35pt>
 File: figures/training_curves.png Graphic file (type png)
 <use figures/training_curves.png>
-Package pdftex.def Info: figures/training_curves.png  used on input line 333.
+Package pdftex.def Info: figures/training_curves.png  used on input line 341.
 (pdftex.def)             Requested size: 252.0pt x 157.50026pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
@@ -303,62 +303,62 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 <figures/per_class_accuracy.png, id=30, 1040.688pt x 397.485pt>
 File: figures/per_class_accuracy.png Graphic file (type png)
 <use figures/per_class_accuracy.png>
-Package pdftex.def Info: figures/per_class_accuracy.png  used on input line 393.
+Package pdftex.def Info: figures/per_class_accuracy.png  used on input line 401.
 (pdftex.def)             Requested size: 252.0pt x 96.24745pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 [4 <./figures/training_curves.png> <./figures/per_class_accuracy.png>]
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 461.
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 469.
  (/usr/local/texlive/2024/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-Underfull \hbox (badness 10000) in paragraph at lines 458--462
+Underfull \hbox (badness 10000) in paragraph at lines 466--470
 []\OT1/ptm/m/n/8 T. N. Kipf and M. Welling, ``Semi-supervised clas-si-fi-ca-tion
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 458--462
+Underfull \hbox (badness 10000) in paragraph at lines 466--470
 \OT1/ptm/m/n/8 with graph con-vo-lu-tional net-works,'' in \OT1/ptm/m/it/8 Proc. Int. Conf.
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 458--462
+Underfull \hbox (badness 10000) in paragraph at lines 466--470
 \OT1/ptm/m/it/8 Learn-ing Rep-re-sen-ta-tions (ICLR)\OT1/ptm/m/n/8 , 2017. [On-line]. Avail-able:
  []
 
 
-Underfull \hbox (badness 4467) in paragraph at lines 464--469
+Underfull \hbox (badness 4467) in paragraph at lines 472--477
 []\OT1/ptm/m/n/8 P. Veli[]ckovi[]c, G. Cu-cu-rull, A. Casanova, A. Romero, P. Li[]o,
  []
 
 
-Underfull \hbox (badness 2486) in paragraph at lines 464--469
+Underfull \hbox (badness 2486) in paragraph at lines 472--477
 \OT1/ptm/m/n/8 and Y. Ben-gio, ``Graph at-ten-tion net-works,'' in \OT1/ptm/m/it/8 Proc. Int. Conf.
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 464--469
+Underfull \hbox (badness 10000) in paragraph at lines 472--477
 \OT1/ptm/m/it/8 Learn-ing Rep-re-sen-ta-tions (ICLR)\OT1/ptm/m/n/8 , 2018. [On-line]. Avail-able:
  []
 
 
-Underfull \hbox (badness 1975) in paragraph at lines 471--477
+Underfull \hbox (badness 1975) in paragraph at lines 479--485
 []\OT1/ptm/m/n/8 L. Ramp[]a[]sek, M. Galkin, V. P. Dwivedi, A. T. Luu, G. Wolf,
  []
 
 
-Underfull \hbox (badness 2452) in paragraph at lines 471--477
+Underfull \hbox (badness 2452) in paragraph at lines 479--485
 \OT1/ptm/m/n/8 and D. Beaini, ``Recipe for a gen-eral, pow-er-ful, scal-able graph
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 471--477
+Underfull \hbox (badness 10000) in paragraph at lines 479--485
 \OT1/ptm/m/n/8 trans-former,'' in \OT1/ptm/m/it/8 Ad-vances in Neu-ral In-for-ma-tion Pro-cess-ing
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 471--477
+Underfull \hbox (badness 10000) in paragraph at lines 479--485
 \OT1/ptm/m/it/8 Sys-tems (NeurIPS)\OT1/ptm/m/n/8 , vol. 35, 2022. [On-line]. Avail-able:
  []
 
@@ -390,7 +390,7 @@ Here is how much of TeX's memory you used:
  1141 hyphenation exceptions out of 8191
  57i,9n,65p,572b,265s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on finalReport.pdf (5 pages, 539864 bytes).
+Output written on finalReport.pdf (5 pages, 539909 bytes).
 PDF statistics:
  121 PDF objects out of 1000 (max. 8388607)
  71 compressed objects within 1 object stream

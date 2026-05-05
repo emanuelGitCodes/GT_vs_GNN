@@ -68,7 +68,7 @@ For this project, we use the ogbn-arxiv dataset, which is a commonly used large-
 benchmark for node classification. It represents 169,343 computer-science papers as nodes,
 connected by 1,166,243 directed citation edges. Each paper belongs to one of 40 arXiv
 subject categories, and each node has a 128-dimensional feature vector made from averaged
-word embedings of the paper's title and abstract. One of the things that makes this
+word embeddings of the paper's title and abstract. One of the things that makes this
 dataset interesting is that some categories are large and self-contained (like cs.CV and
 cs.LG), while others are small and pull from many different areas (like cs.HC and cs.GL).
 This variety makes it a good testbed for comparing how different architectures handle
@@ -110,7 +110,7 @@ structure. They showed that even a two-layer GCN beats older methods on the Cora
 and Pubmed benchmarks. One known issue with GCN is that stacking many layers causes
 over-smoothing, where all nodes end up with similar representations. Adding residual
 connections and normalization layers helps, but it is still something to keep in mind when
-desinging deeper models.
+designing deeper models.
 
 \subsection{Graph Attention Networks}
 
@@ -119,7 +119,7 @@ every neighbor gets the same weight during aggregation, regardless of how releva
 GAT learns attention coefficients for each edge by comparing the representations of the
 two endpoints, so the model can focus on more important neighbors. It also uses multi-head
 attention, where several independent attention mechanisms run in parallel and their outputs
-are concatenated, which helps with stabillity during training. On standard citation network
+are concatenated, which helps with stability during training. On standard citation network
 tasks, GAT performed as well as or better than GCN. Later versions of GAT improved how the
 attention scores are computed, though the original is still widely used as a baseline.
 
@@ -129,7 +129,7 @@ Ramp\'{a}\v{s}ek et al.~\cite{rampasek2022} introduced GPS to address a fundamen
 limitation shared by both GCN and GAT: they can only aggregate information from nearby
 neighbors. If two nodes are far apart in the graph, information has to travel through many
 intermediate nodes, which can get lost or distorted along the way. GPS solves this by
-combinning a standard local message-passing step with a global Transformer that lets every
+combining a standard local message-passing step with a global Transformer that lets every
 node attend to every other node in the graph at once. It also uses Laplacian Positional
 Encodings (LapPE) to give each node a sense of its structural position in the graph,
 since Transformers otherwise have no concept of where nodes are relative to each other.
@@ -143,7 +143,7 @@ large graphs.
 The Open Graph Benchmark (OGB) was created to make GNN comparisons more fair and
 reproducible. Before OGB, most papers reported results on small citation graphs like Cora
 and Citeseer, where even simple models do well and it is hard to tell which architecture
-is actually better on harder tasks. OGB provides fixed dataset splits, a standarized
+is actually better on harder tasks. OGB provides fixed dataset splits, a standardized
 evaluation procedure, and a public leaderboard. The ogbn-arxiv task uses a time-based
 split, where papers before 2017 are for training, 2017--2018 for validation, and after
 2018 for testing. This is more realistic than a random split because it prevents the model
@@ -173,7 +173,7 @@ The $\hat{D}^{-1/2}\hat{A}\hat{D}^{-1/2}$ term normalizes the aggregation by bot
 degree of the neighbor and the degree of the target node. This prevents high-degree nodes
 from dominating the aggregation and keeps the scale of representations stable across layers.
 Because the normalization matrix can be precomputed once from the graph structure, the
-forward pass reduces to a sparse matrix mulitply, which is why GCN is so fast in practice.
+forward pass reduces to a sparse matrix multiply, which is why GCN is so fast in practice.
 In our implementation we use 3 GCN layers with hidden dimension 256 and dropout $p=0.5$
 between layers.
 
@@ -299,7 +299,7 @@ We follow the standard OGB evaluation protocol, which uses the official OGB eval
 compute top-1 node classification accuracy on the test set. The reported test accuracy
 comes from the model checkpoint that had the best validation accuracy during training.
 We also compute per-class accuracy by applying the best checkpoint to all nodes and
-measuring accuracy seperately within each of the 40 subject categories. This is important
+measuring accuracy separately within each of the 40 subject categories. This is important
 for answering the second research question about whether GPS helps interdisciplinary
 classes, since top-1 overall accuracy can hide differences at the class level.
 
@@ -350,7 +350,7 @@ Figure~\ref{fig:curves} shows how validation accuracy changed over training for 
 models. GCN and GAT follow similar paths and both settle near 72--73\%. GPS rises more
 slowly and triggers early stopping at epoch 453, which suggests it ran out of room to
 improve within the mini-batch setting. The learning rate scheduler also reduced the
-learning rate several times during GPS training in responce to flat validation accuracy,
+learning rate several times during GPS training in response to flat validation accuracy,
 which likely prevented further improvement.
 
 \subsection{Per-Class Accuracy and Cross-Domain Analysis}
@@ -424,7 +424,7 @@ compared to GCN's 110K, so it needs more training examples and more epochs to fu
 converge, and our 453-epoch run with aggressive early stopping may not have been enough.
 Third, the ReduceLROnPlateau scheduler reduced the learning rate multiple times in response
 to noisy mini-batch validation accuracy, which may have stopped training too early. Taken
-together, these factors suggest that GPS's advantage over GCN is not automatic and depneds
+together, these factors suggest that GPS's advantage over GCN is not automatic and depends
 heavily on having enough compute to run full-graph attention.
 
 % ============================================================
@@ -455,7 +455,7 @@ with the idea that global attention is most useful when a node draws from many d
 areas of the graph. One direction for future work would be to explore hybrid approaches
 where GPS-style global attention is only applied to a subset of nodes identified as
 cross-domain, which might recover some of the accuracy gains without the full
-computaitonal cost. Other interesting directions include applying these models to
+computational cost. Other interesting directions include applying these models to
 heterogeneous graphs that have multiple node and edge types, or extending the comparison
 to link prediction tasks.
 
