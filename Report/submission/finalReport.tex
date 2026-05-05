@@ -5,6 +5,7 @@
 \usepackage{textcomp}
 \usepackage{array}
 \usepackage{booktabs}
+\usepackage{subfig}
 
 \begin{document}
 
@@ -204,7 +205,7 @@ scores.
 
 A GPS layer~\cite{rampasek2022} runs two separate branches on the same node representations
 and then combines them. The local branch is a standard message-passing network (we use
-GINConv) that aggregates from immediate neighbors. The global branch is a full Transformer
+GCNConv) that aggregates from immediate neighbors. The global branch is a full Transformer
 self-attention that allows every node in the current subgraph to attend to every other
 node. If we call the outputs of these two branches $\mathbf{h}_v^{\text{MPNN}}$ and
 $\mathbf{h}_v^{\text{Attn}}$ for node $v$, then the GPS layer update is
@@ -270,7 +271,7 @@ Mean undirected degree & 13.67 \\
 
 \subsection{Model Architecture and Training Setup}
 
-All models were implemented in Python 3.10 using PyTorch 2.x and PyTorch Geometric, and
+All models were implemented in Python 3.11 using PyTorch 2.x and PyTorch Geometric, and
 training was done on a Google Colab instance with an NVIDIA GPU. Hyperparameters were set
 through YAML config files, and the key settings for each model are described below.
 
@@ -336,15 +337,18 @@ GPS & 68.97 & 70.67 & 2,421,032 & 34.2 \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[h]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/training_curves.png}
-\caption{Validation accuracy over training epochs for GCN (500 epochs), GAT (500 epochs),
-and GPS (453 epochs, early stopped). GCN and GAT converge to similar levels around 72--73\%,
-while GPS levels off about 2 percentage points lower. The gap reflects the reduced attention
-context each cluster has under ClusterLoader.}
+\subfloat[GCN (500 epochs)]{\includegraphics[width=0.32\linewidth]{figures/gcn_training_curves.png}}
+\hfill
+\subfloat[GAT (500 epochs)]{\includegraphics[width=0.32\linewidth]{figures/gat_training_curves.png}}
+\hfill
+\subfloat[GPS (453 epochs, early stopped)]{\includegraphics[width=0.32\linewidth]{figures/gps_training_curves.png}}
+\caption{Training and validation accuracy over epochs for each model. GCN and GAT converge
+to similar validation levels around 72--73\%, while GPS levels off about 2 percentage points
+lower. The gap reflects the reduced attention context each cluster has under ClusterLoader.}
 \label{fig:curves}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:curves} shows how validation accuracy changed over training for all three
 models. GCN and GAT follow similar paths and both settle near 72--73\%. GPS rises more

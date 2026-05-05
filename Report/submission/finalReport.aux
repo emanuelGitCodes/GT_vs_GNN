@@ -24,26 +24,30 @@
 \@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Data}{3}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Dataset Characteristics of ogbn-arxiv}}{3}{}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{tab:dataset}{{I}{3}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Model Architecture and Training Setup}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Evaluation Metrics}{3}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {V}Results}{3}{}\protected@file@percent }
 \newlabel{sec:results}{{V}{3}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Overall Test Accuracy}{3}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Performance Comparison on ogbn-arxiv}}{3}{}\protected@file@percent }
+\newlabel{tab:results}{{II}{3}{}{}{}}
 \citation{rampasek2022}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Performance Comparison on ogbn-arxiv}}{4}{}\protected@file@percent }
-\newlabel{tab:results}{{II}{4}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Validation accuracy over training epochs for GCN (500 epochs), GAT (500 epochs), and GPS (453 epochs, early stopped). GCN and GAT converge to similar levels around 72--73\%, while GPS levels off about 2 percentage points lower. The gap reflects the reduced attention context each cluster has under ClusterLoader.}}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Training and validation accuracy over epochs for each model. GCN and GAT converge to similar validation levels around 72--73\%, while GPS levels off about 2 percentage points lower. The gap reflects the reduced attention context each cluster has under ClusterLoader.}}{4}{}\protected@file@percent }
 \newlabel{fig:curves}{{1}{4}{}{}{}}
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(a)}{\ignorespaces {GCN (500 epochs)}}}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(b)}{\ignorespaces {GAT (500 epochs)}}}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {subfigure}{\numberline{(c)}{\ignorespaces {GPS (453 epochs, early stopped)}}}{4}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Per-Class Accuracy and Cross-Domain Analysis}{4}{}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Largest Per-Class GPS Gains and Losses Relative to GCN}}{4}{}\protected@file@percent }
 \newlabel{tab:perclass}{{III}{4}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Per-class accuracy for GCN, GAT, and GPS across all 40 ogbn-arxiv subject categories. GPS underperforms on large, self-citing categories like cs.LG and cs.CV, but narrows the gap or outperforms GCN on smaller cross-disciplinary ones.}}{4}{}\protected@file@percent }
 \newlabel{fig:perclass}{{2}{4}{}{}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Analysis of GPS Underperformance}{4}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Conclusion}{4}{}\protected@file@percent }
 \bibcite{kipf2017}{1}
 \bibcite{velickovic2018}{2}
 \bibcite{rampasek2022}{3}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Conclusion}{5}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{References}{5}{}\protected@file@percent }
 \gdef \@abspage@last{5}
