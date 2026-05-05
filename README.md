@@ -17,18 +17,11 @@ This repository compares **GCN**, **GAT**, and **GPS (Graph Transformer)** on th
 Two supported execution environments:
 
 1. **Local (Apple M1 Max, MPS backend available)**
-   - Use `--device cpu` for **GCN/GAT** (PyG sparse/scatter ops are typically faster and more stable on CPU locally).
-   - Reserve MPS for GPS dense attention workloads in Phase 4.
+   - Use `--device cpu` for **GCN/GAT**. PyG sparse/scatter ops are typically faster and more stable on CPU locally.
+   - GPS can run on CPU if `pyg-lib` or `torch-sparse` is installed, but the intended GPS run is on CUDA.
 2. **Colab (CUDA: H100/A100/T4 fallback)**
-   - Use `--device auto` or `--device cuda`.
+   - Use `--device cuda` for the GPS experiment.
    - Main workflow notebook: `notebooks/colab_train_and_compare.ipynb`.
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-pip install -e .
-```
 
 ---
 
@@ -61,47 +54,61 @@ project/
 
 ## Quick Start
 
-### 1) Verify device detection
+The OGB dataset is not committed to this repository. It is downloaded
+automatically into `data/` the first time `train.py` or the dataset loader runs.
+
+### 1) Install dependencies
+
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+### 2) Verify device detection
 
 ```bash
 python -m gt_vs_gnn.utils.device
 ```
 
-### 2) Train GCN (local CPU recommended)
+### 3) Train GCN and GAT (local CPU recommended)
 
 ```bash
 python scripts/train.py --model gcn --device cpu
-```
-
-### 3) Train GAT (local CPU recommended)
-
-```bash
 python scripts/train.py --model gat --device cpu
 ```
 
-### 4) Train with CLI overrides
+### 4) Train GPS (Colab CUDA recommended)
 
 ```bash
-python scripts/train.py --model gat --device cpu --epochs 300 --lr 0.0005
+python scripts/train.py --model gps --device cuda
 ```
 
-### 5) Train GPS (Colab CUDA recommended)
+> GPS uses Laplacian positional encoding + ClusterLoader mini-batching. Ensure `pyg-lib` or `torch-sparse` is installed in the runtime before running GPS.
 
-```bash
-python scripts/train.py --model gps --device auto
-```
-
-> GPS uses Laplacian positional encoding + ClusterLoader mini-batching. Ensure `pyg-lib` or `torch-sparse` is installed in your runtime.
-
-### 6) Generate comparison tables and plots locally
+### 5) Generate comparison tables and plots
 
 ```bash
 python scripts/compare_results.py
 ```
 
-This reads saved `results/<model>/metrics.json` and `per_class_acc.json`
-artifacts, then writes report-ready outputs to `results/comparisons/`.
-It is intended to run on the local M1 Max without Colab.
+This reads saved `results/<model>/metrics.json`, `per_class_acc.json`, and
+`results/dataset_stats.json`, then writes report-ready outputs to
+`results/comparisons/`.
+
+If you want to regenerate comparisons from the included result files without
+loading/downloading the OGB dataset, run:
+
+```bash
+python scripts/compare_results.py --skip-dataset
+```
+
+### Optional: custom training run
+
+Use CLI overrides when testing alternate hyperparameters:
+
+```bash
+python scripts/train.py --model gat --device cpu --epochs 300 --lr 0.0005
+```
 
 ---
 
@@ -137,11 +144,3 @@ Comparison artifacts are written under `results/comparisons/`, including:
 | 5 | ✅ Done | Per-class comparative analysis |
 | 6 | ↩️ Deferred | Attention & embedding visualization |
 | 7 | ✅ Done | Report & submission |
-
-For detailed deliverables and risk mitigation, see `docs/IMPLEMENTATION_GUIDE.md`.
-
-Phase 6 was deferred because the current GPS implementation uses
-ClusterLoader mini-batching, which limits attention to cluster-local context
-and does not expose a clean full-graph attention analysis path. The final
-report should instead focus on the completed aggregate, per-class, F1, and
-cross-domain analyses in `results/comparisons/`.
