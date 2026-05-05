@@ -323,19 +323,21 @@ took the longest to train at around 34 seconds per epoch due to the overhead of 
 processing with ClusterLoader.
 
 \begin{table}[h]
-\caption{Performance Comparison on ogbn-arxiv}
-\label{tab:results}
-\centering
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Model} & \textbf{Test Acc (\%)} & \textbf{Val Acc (\%)} & \textbf{\# Params} & \textbf{Time/Epoch (s)} \\
-\midrule
-GCN & 72.00 & 72.84 & 110,120 & 2.4 \\
-GAT & 71.75 & 72.85 & 1,362,040 & 5.8 \\
-GPS & 68.97 & 70.67 & 2,421,032 & 34.2 \\
-\bottomrule
-\end{tabular}
-\end{table}
+  \caption{Performance Comparison on ogbn-arxiv}
+  \label{tab:results}
+  \centering
+  \begin{tabular}{lcccc}
+  \toprule
+  \textbf{Model} & \textbf{Test Acc.} & \textbf{Val Acc.} & \textbf{Macro Acc.} & \textbf{\# Params} \\
+   & \textbf{(\%)} & \textbf{(\%)} & \textbf{(\%)} & \\
+  \midrule
+  GCN & 72.00 & 72.84 & 48.36 & 110K \\
+  GAT & 71.75 & 72.85 & 51.26 & 1.36M \\
+  GPS & 68.97 & 70.67 & 47.95 & 2.42M \\
+  \bottomrule
+  \end{tabular}
+  \end{table}
+
 
 \begin{figure*}[t]
 \centering
